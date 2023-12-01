@@ -1,0 +1,25 @@
+--------------------------------------------------------------------------------------
+How to install RabbitMQ on Windows 10
+--------------------------------------------------------------------------------------
+Download and install otp for erlang
+Download and install rabbitmq-server
+--------------------------------------------------------------------------------------
+Edit Environment Variables on Windows according to the following.
+--------------------------------------------------------------------------------------
+key: RABBITMQ_SERVER
+value: C:\Program Files\RabbitMQ Server\rabbitmq_server-3.12.8
+add to path => %RABBITMQ_SERVER%\sbin
+add to path => %ERLANG_HOME%\bin
+--------------------------------------------------------------------------------------
+Go to Command Prompt on Windows and then run the following commands in order
+--------------------------------------------------------------------------------------
+rabbitmq-plugins enable rabbitmq_management
+rabbitmqctl stop
+rabbitmqctl start_app
+--------------------------------------------------------------------------------------
+Now, enjoy installing RabbitMQ
+--------------------------------------------------------------------------------------
+http://localhost:15672/
+user: guest
+pass: guest
+--------------------------------------------------------------------------------------

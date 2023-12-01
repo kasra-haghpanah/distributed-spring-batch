@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.example</groupId>
+        <artifactId>batch-processing</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+    <groupId>com.example.batchprocessing</groupId>
+    <artifactId>slave</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>slave</name>
+    <description>slave</description>
+    <properties>
+    </properties>
+    <dependencies>
+
+
+
+    </dependencies>
+
+    <build>
+        <plugins>
+
+            <plugin>
+                <!-- java -jar master.jar   -->
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.example.batchprocessing.slave.SlaveApplication</mainClass>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>build-info</id>
+                        <goals>
+                            <!-- for read maven property by BuildProperties  -->
+                            <goal>build-info</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+
+        <finalName>${project.artifactId}</finalName>
+    </build>
+
+</project>
