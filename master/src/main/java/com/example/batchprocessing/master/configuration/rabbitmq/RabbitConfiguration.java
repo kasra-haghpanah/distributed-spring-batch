@@ -19,6 +19,7 @@ import org.springframework.integration.channel.QueueChannel;
 import org.springframework.integration.core.MessagingTemplate;
 import org.springframework.integration.dsl.MessageChannels;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.PollableChannel;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -46,26 +47,6 @@ public class RabbitConfiguration {
     @Bean
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
         return new RabbitTemplate(connectionFactory);
-    }
-
-    @Bean
-    @Qualifier("requests")
-    MessageChannel requests() {
-        return MessageChannels.direct().getObject();
-    }
-
-    @Bean
-    @Qualifier("replies")
-    MessageChannel replies() {
-        return MessageChannels.queue().getObject();
-    }
-
-    @Bean
-    public MessagingTemplate messagingTemplate(ConnectionFactory connectionFactory) {
-        MessagingTemplate messagingTemplate = new MessagingTemplate();
-        messagingTemplate.setDefaultChannel(requests());
-        messagingTemplate.setReceiveTimeout(2000);
-        return messagingTemplate;
     }
 
     @Bean

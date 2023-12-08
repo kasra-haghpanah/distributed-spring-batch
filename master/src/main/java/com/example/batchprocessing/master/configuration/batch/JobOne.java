@@ -4,6 +4,7 @@ import com.example.batchprocessing.master.configuration.listener.JobCompletedLis
 import com.example.batchprocessing.master.configuration.structure.CsvRow;
 import com.example.batchprocessing.master.configuration.structure.YearPlatformSales;
 import com.example.batchprocessing.master.configuration.structure.YearReport;
+import com.example.batchprocessing.master.configuration.util.JavaUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.StepScope;
@@ -13,6 +14,9 @@ import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.core.step.tasklet.TaskletStep;
+import org.springframework.batch.integration.chunk.ChunkMessageChannelItemWriter;
+import org.springframework.batch.integration.chunk.RemoteChunkHandlerFactoryBean;
+import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
@@ -25,9 +29,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
+import org.springframework.integration.core.MessagingTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.PollableChannel;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -87,18 +94,6 @@ public class JobOne {
                 .build();
     }
 
-
-    public static int parseIntText(String text) {
-        int result = 0;
-        try {
-            result = Integer.parseInt(text);
-        } catch (RuntimeException exception) {
-            result = 0;
-        } finally {
-            return result;
-        }
-    }
-
     @Bean // JsonItemReader
     @Qualifier("gameByYearReader")
     public FlatFileItemReader<CsvRow> gameByYearReader(
@@ -112,7 +107,7 @@ public class JobOne {
                 .names("rank,name,platform,year,genre,publisher,na,eu,jp,other,global".split(","))
                 .linesToSkip(1)
                 .fieldSetMapper(fieldSet -> { // FieldSet<CsvRow>
-                    return new CsvRow(fieldSet.readInt("rank"), fieldSet.readString("name"), fieldSet.readString("platform"), parseIntText(fieldSet.readString("year")), fieldSet.readString("genre"), fieldSet.readString("publisher"), fieldSet.readFloat("na"), fieldSet.readFloat("eu"), fieldSet.readFloat("jp"), fieldSet.readFloat("other"), fieldSet.readFloat("global"));
+                    return new CsvRow(fieldSet.readInt("rank"), fieldSet.readString("name"), fieldSet.readString("platform"), JavaUtil.getInteger(fieldSet.readString("year"), 0), fieldSet.readString("genre"), fieldSet.readString("publisher"), fieldSet.readFloat("na"), fieldSet.readFloat("eu"), fieldSet.readFloat("jp"), fieldSet.readFloat("other"), fieldSet.readFloat("global"));
                 }).build();
     }
 
@@ -298,8 +293,6 @@ public class JobOne {
 
     }
 
-    //public RemoteChunkH
-
     @Bean
     @Qualifier("yearReportStep")
     // @LeaderChunkStep
@@ -308,21 +301,24 @@ public class JobOne {
             PlatformTransactionManager transactionManager,
             @Qualifier("yearPlatformSalesItemReader") ItemReader<YearReport> yearPlatformSalesItemReader,
             //@LeaderItemWriter
-            //ChunkMessageChannelItemWriter<String> itemWriter,
+            ChunkMessageChannelItemWriter<String> chunkMessageChannelItemWriter,
             ObjectMapper objectMapper
     ) {
         return new StepBuilder("yearReportStep", repository)
-                .<YearReport, YearReport>chunk(1000, transactionManager)
+                .<YearReport, String>chunk(100, transactionManager)
                 .reader(yearPlatformSalesItemReader)
-                //.processor(objectMapper::writeValueAsString)
-                .writer(chunk -> {
+                .processor((yearReport)->{
+                    return objectMapper.writeValueAsString(yearReport);
+                })
+                .writer(chunkMessageChannelItemWriter)
+/*                .writer(chunk -> {
                     var set = new LinkedHashSet<YearReport>();
                     set.addAll(chunk.getItems());
                     System.out.println("------------------------------");
                     set.forEach(r -> {
                         System.out.println(r.toString());
                     });
-                })
+                })*/
                 .build();
     }
 
