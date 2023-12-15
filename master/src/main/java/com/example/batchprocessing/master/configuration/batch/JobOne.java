@@ -2,6 +2,7 @@ package com.example.batchprocessing.master.configuration.batch;
 
 import com.example.batchprocessing.master.configuration.listener.JobCompletedListener;
 import com.example.batchprocessing.master.configuration.structure.CsvRow;
+import com.example.batchprocessing.master.configuration.structure.Customer;
 import com.example.batchprocessing.master.configuration.structure.YearPlatformSales;
 import com.example.batchprocessing.master.configuration.structure.YearReport;
 import com.example.batchprocessing.master.configuration.util.JavaUtil;
@@ -17,8 +18,11 @@ import org.springframework.batch.core.step.tasklet.TaskletStep;
 import org.springframework.batch.integration.chunk.ChunkMessageChannelItemWriter;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
+import org.springframework.batch.item.database.JdbcPagingItemReader;
+import org.springframework.batch.item.database.Order;
 import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
 import org.springframework.batch.item.database.builder.JdbcCursorItemReaderBuilder;
+import org.springframework.batch.item.database.builder.JdbcPagingItemReaderBuilder;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.support.ListItemReader;
@@ -55,7 +59,8 @@ public class JobOne {
             @Qualifier("gameByYearStep") Step gameByYearStep,
             @Qualifier("errorStep") Step errorStep,
             @Qualifier("yearPlatformReportStep") Step yearPlatformReportStep,
-            @Qualifier("yearReportStep") TaskletStep yearReportStep,
+            //@Qualifier("yearReportStep") TaskletStep yearReportStep,
+            @Qualifier("managerStep") TaskletStep managerStep,
             @Qualifier("endStep") Step endStep
     ) {
         return new JobBuilder("jobSampleOne", jobRepository)
@@ -63,7 +68,8 @@ public class JobOne {
                 .start(stepOne)
                 .next(gameByYearStep).on(EMPTY_CSV_STATUS).to(errorStep)  //
                 .from(gameByYearStep).on("*").to(yearPlatformReportStep) //
-                .next(yearReportStep)
+                //.next(yearReportStep)
+                .next(managerStep)
                 .next(endStep) //.end().build();
                 .build()
                 .build();
@@ -269,9 +275,10 @@ public class JobOne {
     };
 
     @Bean
+    @StepScope
     @Qualifier("yearPlatformSalesItemReader")
     public ItemReader<YearReport> yearPlatformSalesItemReader(@Qualifier("dataSourceTwo") DataSource dataSource) {
-        var sql = """
+        /*var sql = """
                 SELECT year,
                        ypr.platform,
                        ypr.sales,
@@ -279,41 +286,63 @@ public class JobOne {
                 FROM year_platform_report ypr
                 WHERE ypr.year != 0
                 ORDER BY year
-                """;
-        return new JdbcCursorItemReaderBuilder<YearReport>()
+                """;*/
+        Map<String, Object> parameterValues = new HashMap<>();
+        parameterValues.put("statusCode", 0);
+
+        return new JdbcPagingItemReaderBuilder<YearReport>().name("customerReader")
+                .dataSource(dataSource)
+                .selectClause("""
+                        SELECT year,
+                        ypr.platform,
+                        ypr.sales,
+                        (SELECT COUNT(yps.year) FROM year_platform_report yps WHERE yps.year = ypr.year ) 
+                         """)
+                .fromClause("FROM year_platform_report ypr")
+                .whereClause("WHERE ypr.year != :statusCode")
+                .sortKeys(Map.of("year", Order.ASCENDING))
+                .rowMapper(rowMapper)
+                .pageSize(100)
+                .parameterValues(parameterValues)
+                .build();
+
+        /*return new JdbcCursorItemReaderBuilder<YearReport>()
                 .sql(sql)
                 .name("yearPlatformSalesItemReader")
                 .dataSource(dataSource)
                 .rowMapper(rowMapper)
-                .build();
+                .build();*/
 
     }
 
-    public record Customer(String name) {
-    }
 
-    @Bean
-    @Qualifier("yearReportStep")
+   // @Bean
+    //@Qualifier("yearReportStep")
     public TaskletStep yearReportStep(
             JobRepository repository,
             PlatformTransactionManager transactionManager,
             @Qualifier("yearPlatformSalesItemReader") ItemReader<YearReport> yearPlatformSalesItemReader,
-            @Qualifier("masterChunkItemWriter") ChunkMessageChannelItemWriter<String> chunkMessageChannelItemWriter,
+            //@Qualifier("masterChunkItemWriter") ChunkMessageChannelItemWriter<String> chunkMessageChannelItemWriter,
             @Qualifier("jsonMapper") ObjectMapper objectMapper
     ) {
-        var listItemReader = new ListItemReader<>(
-                List.of(new Customer("Dave"), new Customer("Michael"), new Customer("Mahmoud")));
+
+        var listItemReader = new ListItemReader<>(List.of(
+                new Customer("Dave"),
+                new Customer("Michael"),
+                new Customer("Mahmoud")
+        )
+        );
 
 
         return new StepBuilder("yearReportStep", repository)
                 //.<YearReport, String>chunk(100, transactionManager)
                 //.reader(yearPlatformSalesItemReader)
-                .<Customer, String>chunk(3, transactionManager)
+                .<Customer, String>chunk(100, transactionManager)
                 .reader(listItemReader)
                 .processor((yearReport) -> {
                     return objectMapper.writeValueAsString(yearReport);
                 })
-                .writer(chunkMessageChannelItemWriter)
+               // .writer(chunkMessageChannelItemWriter)
 /*                .writer(chunk -> {
                     var set = new LinkedHashSet<YearReport>();
                     set.addAll(chunk.getItems());

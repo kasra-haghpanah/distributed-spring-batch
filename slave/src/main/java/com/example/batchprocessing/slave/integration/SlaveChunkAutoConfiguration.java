@@ -1,11 +1,18 @@
 package com.example.batchprocessing.slave.integration;
 
+import com.example.batchprocessing.slave.configuration.jackson.Customer;
 import com.example.batchprocessing.slave.configuration.properties.Properties;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.batch.core.step.item.ChunkProcessor;
 import org.springframework.batch.core.step.item.SimpleChunkProcessor;
 import org.springframework.batch.integration.chunk.ChunkProcessorChunkHandler;
 import org.springframework.batch.integration.chunk.ChunkRequest;
+import org.springframework.batch.integration.chunk.RemoteChunkingWorkerBuilder;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -13,6 +20,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.integration.amqp.dsl.Amqp;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.dsl.IntegrationFlow;
@@ -24,10 +32,30 @@ import org.springframework.util.Assert;
 import java.text.MessageFormat;
 import java.util.List;
 
-
+//@EnableBatchIntegration
+//@EnableBatchProcessing
 @Configuration
 @ConditionalOnProperty(value = "bootiful.batch.chunk.slave", havingValue = "true")
 class SlaveChunkAutoConfiguration {
+
+
+    @Bean
+    @Primary
+    @Qualifier("rabbitMQConnectionFactory")
+    ConnectionFactory connectionFactory() {
+        CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
+        connectionFactory.setAddresses(Properties.getRabbitmqHost());
+        connectionFactory.setPort(Properties.getRabbitmqPort());
+        connectionFactory.setUsername(Properties.getRabbitmqUsername());
+        connectionFactory.setPassword(Properties.getRabbitmqPassword());
+        return connectionFactory;
+    }
+
+    @Bean
+    @Primary
+    AmqpTemplate amqpTemplate(ConnectionFactory connectionFactory) {
+        return new RabbitTemplate(connectionFactory);
+    }
 
     @Bean
     @Qualifier("slaveInboundChunkChannel")
@@ -37,7 +65,7 @@ class SlaveChunkAutoConfiguration {
 
     @Bean
     IntegrationFlow inboundAmqpIntegrationFlow(
-            ConnectionFactory connectionFactory,
+            @Qualifier("rabbitMQConnectionFactory") ConnectionFactory connectionFactory,
             @Qualifier("slaveInboundChunkChannel") MessageChannel inbound
 
     ) {
@@ -64,38 +92,66 @@ class SlaveChunkAutoConfiguration {
                 .get();
     }
 
+
+    @Bean
+    @Qualifier("remoteChunkingWorkerBuilder")
+    RemoteChunkingWorkerBuilder remoteChunkingWorkerBuilder() {
+        return new RemoteChunkingWorkerBuilder();
+    }
+
+    @Bean
+    public IntegrationFlow workerFlow(
+            @Qualifier("remoteChunkingWorkerBuilder") RemoteChunkingWorkerBuilder workerBuilder,
+            @Qualifier("slaveInboundChunkChannel") DirectChannel inbound,
+            @Qualifier("slaveOutboundChunkChannel") DirectChannel outbound,
+            @Qualifier("slaveItemProcessor") ItemProcessor<?, ?> itemProcessor
+    ) {
+        return workerBuilder
+                .itemProcessor(itemProcessor)
+                .itemWriter(itemWriter)
+                .inputChannel(inbound) // requests received from the manager
+                .outputChannel(outbound) // replies sent to the manager
+                .build();
+    }
+
     @Bean
     @Qualifier("slaveItemProcessor")
-    ItemProcessor<Object, Object> itemProcessor() {
+    ItemProcessor<?, ?> itemProcessor(ObjectMapper objectMapper) {
         return item -> {
             System.out.println(item);
-            return item;
+
+            List<Customer> customers = null;
+            customers = objectMapper.readValue((String) item, new TypeReference<List<Customer>>() {
+            });
+
+            return customers;
         };
     }
 
-    @Bean
-    @Qualifier("slaveItemWriter")
-    ItemWriter<Object> itemWriter() {
-        return chunk -> {
-            System.out.println("doing the long-running writing thing");
-            List<?> items = chunk.getItems();
-            for (var i : items)
-                System.out.println(MessageFormat.format("i={0}", i));
-        };
-    }
+//    @Bean
+//    @Qualifier("slaveItemWriter")
+    ItemWriter<?> itemWriter = chunk -> {
+        System.out.println("doing the long-running writing thing");
+        List<?> items = chunk.getItems();
+        for (var i : items)
+            System.out.println(MessageFormat.format("i={0}", i));
+    };
 
-    @Bean
+
+    // Middleware beans setup omitted
+
+/*    @Bean
     @Qualifier("slaveChunkProcessorChunkHandler")
     @ConditionalOnMissingBean
     @SuppressWarnings("unchecked")
     ChunkProcessorChunkHandler<?> slaveChunkProcessorChunkHandler(
             // todo make this optional
             // @Qualifier("slaveItemProcessor") ObjectProvider<ItemProcessor<Object, Object>> processor,
-            @Qualifier("slaveItemProcessor") ItemProcessor<?, ?> processor,
-            @Qualifier("slaveItemWriter") ItemWriter<?> writer
+            @Qualifier("slaveItemProcessor") ItemProcessor<?, ?> itemProcessor,
+            @Qualifier("slaveItemWriter") ItemWriter<?> itemWriter
     ) {
         var chunkProcessorChunkHandler = new ChunkProcessorChunkHandler<>();
-        chunkProcessorChunkHandler.setChunkProcessor(new SimpleChunkProcessor(processor, writer));
+        chunkProcessorChunkHandler.setChunkProcessor(new SimpleChunkProcessor(itemProcessor, itemWriter));
         return chunkProcessorChunkHandler;
     }
 
@@ -104,8 +160,8 @@ class SlaveChunkAutoConfiguration {
     @SuppressWarnings("unchecked")
     IntegrationFlow chunkProcessorChunkHandlerIntegrationFlow(
             @Qualifier("slaveChunkProcessorChunkHandler") ChunkProcessorChunkHandler<Object> chunkProcessorChunkHandler,
-            @Qualifier("slaveInboundChunkChannel") DirectChannel inbound,
-            @Qualifier("slaveOutboundChunkChannel") DirectChannel outbound
+            @Qualifier("slaveInboundChunkChannel") DirectChannel inbound//,
+            //@Qualifier("slaveOutboundChunkChannel") DirectChannel outbound
     ) {
         return IntegrationFlow//
                 .from(inbound)//
@@ -123,6 +179,6 @@ class SlaveChunkAutoConfiguration {
                     }
                 })//
                 .get();
-    }
+    }*/
 
 }

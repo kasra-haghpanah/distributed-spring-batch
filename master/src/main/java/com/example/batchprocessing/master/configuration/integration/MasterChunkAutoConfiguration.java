@@ -76,7 +76,7 @@ class MasterChunkAutoConfiguration {
                 .get();
     }
 
-    @Bean
+/*    @Bean
     @ConditionalOnMissingBean
     @Qualifier("masterChunkMessagingTemplate")
     MessagingTemplate masterChunkMessagingTemplate(@Qualifier("masterOutboundChunkChannel") DirectChannel masterRequestsMessageChannel) {
@@ -84,32 +84,37 @@ class MasterChunkAutoConfiguration {
         template.setDefaultChannel(masterRequestsMessageChannel);
         template.setReceiveTimeout(2000);
         return template;
-    }
+    }*/
 
-    @Bean
+/*    @Bean
     @ConditionalOnMissingBean
     RemoteChunkHandlerFactoryBean<Object> masterChunkHandler(
             ChunkMessageChannelItemWriter<Object> chunkMessageChannelItemWriterProxy,
-            @Qualifier("yearReportStep") TaskletStep step
+            //@Qualifier("yearReportStep") TaskletStep step
+            @Qualifier("managerStep") TaskletStep managerStep
     ) {
         var remoteChunkHandlerFactoryBean = new RemoteChunkHandlerFactoryBean<>();
         remoteChunkHandlerFactoryBean.setChunkWriter(chunkMessageChannelItemWriterProxy);
-        remoteChunkHandlerFactoryBean.setStep(step);
+        remoteChunkHandlerFactoryBean.setStep(managerStep);
         return remoteChunkHandlerFactoryBean;
-    }
+    }*/
 
-    @Bean
+/*    @Bean
     @Qualifier("masterChunkItemWriter")
         // @StepScope
     ChunkMessageChannelItemWriter<?> masterChunkMessageChannelItemWriter(
             @Qualifier("masterChunkMessagingTemplate") MessagingTemplate template,
             @Qualifier("masterInboundChunkChannel") QueueChannel masterRepliesMessageChannel
     ) {
-        var chunkMessageChannelItemWriter = new ChunkMessageChannelItemWriter<>();
+
+        ChunkMessageChannelItemWriter<Integer> chunkMessageChannelItemWriter = new ChunkMessageChannelItemWriter<>();
         chunkMessageChannelItemWriter.setMessagingOperations(template);
         chunkMessageChannelItemWriter.setReplyChannel(masterRepliesMessageChannel);
         return chunkMessageChannelItemWriter;
-    }
+    }*/
+
+
+
 
     // todo connect this with rabbitmq or kafka or something real so I can setup a worker node
     //@Bean

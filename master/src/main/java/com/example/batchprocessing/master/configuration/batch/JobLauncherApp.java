@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -64,13 +65,21 @@ public class JobLauncherApp {
         this.jobRepository = jobRepository;
     }
 
+
+    @Bean
+    @Primary
+    @Qualifier("taskExecutor")
+    TaskExecutor taskExecutor() {
+        return new SimpleAsyncTaskExecutor();
+    }
+
     // for running multiple jobs as async
     @Bean
     @Qualifier("jobLauncherTwo")
-    public JobLauncher jobLauncherTwo() throws Exception {
+    public JobLauncher jobLauncherTwo(@Qualifier("taskExecutor") TaskExecutor taskExecutor) throws Exception {
         TaskExecutorJobLauncher jobLauncher = new TaskExecutorJobLauncher();
         jobLauncher.setJobRepository(jobRepository);
-        jobLauncher.setTaskExecutor(new SimpleAsyncTaskExecutor());
+        jobLauncher.setTaskExecutor(taskExecutor);
         jobLauncher.afterPropertiesSet();
         return jobLauncher;
     }
