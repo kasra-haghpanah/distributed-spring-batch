@@ -24,7 +24,7 @@ public class MyListener implements ApplicationListener<ApplicationReadyEvent> {
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
         System.out.println("Hello, from a custom component!");
-        rabbitTemplate.convertAndSend(Properties.getRabbitmqTopicExchange(), Properties.getRabbitmqTopicExchangeRoutingKeyOne(), "Hello from RabbitMQ by requests!".getBytes(StandardCharsets.UTF_8));
-        rabbitTemplate.convertAndSend(Properties.getRabbitmqTopicExchange(), Properties.getRabbitmqTopicExchangeRoutingKeyTwo(), "Hello from RabbitMQ by replies!".getBytes(StandardCharsets.UTF_8));
+        //rabbitTemplate.convertAndSend(Properties.getRabbitmqTopicExchange(), Properties.getRabbitmqTopicExchangeRoutingKeyOne(), "Hello from RabbitMQ by requests!".getBytes(StandardCharsets.UTF_8));
+        //rabbitTemplate.convertAndSend(Properties.getRabbitmqTopicExchange(), Properties.getRabbitmqTopicExchangeRoutingKeyTwo(), "Hello from RabbitMQ by replies!".getBytes(StandardCharsets.UTF_8));
     }
 }

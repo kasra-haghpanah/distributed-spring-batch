@@ -1,4 +1,4 @@
-package com.example.batchprocessing.slave.batch;
+package com.example.batchprocessing.slave.structure;
 
 public record YearPlatformSales(int year, String platform, float sales) {
 }

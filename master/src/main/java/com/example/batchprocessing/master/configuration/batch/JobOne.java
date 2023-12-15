@@ -15,26 +15,22 @@ import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.core.step.tasklet.TaskletStep;
 import org.springframework.batch.integration.chunk.ChunkMessageChannelItemWriter;
-import org.springframework.batch.integration.chunk.RemoteChunkHandlerFactoryBean;
-import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
 import org.springframework.batch.item.database.builder.JdbcCursorItemReaderBuilder;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
+import org.springframework.batch.item.support.ListItemReader;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
-import org.springframework.integration.core.MessagingTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.messaging.MessageChannel;
-import org.springframework.messaging.PollableChannel;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -293,21 +289,28 @@ public class JobOne {
 
     }
 
+    public record Customer(String name) {
+    }
+
     @Bean
     @Qualifier("yearReportStep")
-    // @LeaderChunkStep
     public TaskletStep yearReportStep(
             JobRepository repository,
             PlatformTransactionManager transactionManager,
             @Qualifier("yearPlatformSalesItemReader") ItemReader<YearReport> yearPlatformSalesItemReader,
-            //@LeaderItemWriter
-            ChunkMessageChannelItemWriter<String> chunkMessageChannelItemWriter,
-            ObjectMapper objectMapper
+            @Qualifier("masterChunkItemWriter") ChunkMessageChannelItemWriter<String> chunkMessageChannelItemWriter,
+            @Qualifier("jsonMapper") ObjectMapper objectMapper
     ) {
+        var listItemReader = new ListItemReader<>(
+                List.of(new Customer("Dave"), new Customer("Michael"), new Customer("Mahmoud")));
+
+
         return new StepBuilder("yearReportStep", repository)
-                .<YearReport, String>chunk(100, transactionManager)
-                .reader(yearPlatformSalesItemReader)
-                .processor((yearReport)->{
+                //.<YearReport, String>chunk(100, transactionManager)
+                //.reader(yearPlatformSalesItemReader)
+                .<Customer, String>chunk(3, transactionManager)
+                .reader(listItemReader)
+                .processor((yearReport) -> {
                     return objectMapper.writeValueAsString(yearReport);
                 })
                 .writer(chunkMessageChannelItemWriter)

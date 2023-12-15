@@ -1,5 +1,6 @@
-package com.example.batchprocessing.slave.configuration;
+package com.example.batchprocessing.slave.configuration.jdbc;
 
+import com.example.batchprocessing.slave.configuration.properties.Properties;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Qualifier;

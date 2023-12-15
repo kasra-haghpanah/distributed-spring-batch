@@ -1,4 +1,4 @@
-package com.example.batchprocessing.slave.batch;
+package com.example.batchprocessing.slave.structure;
 
 import java.util.Collection;
 

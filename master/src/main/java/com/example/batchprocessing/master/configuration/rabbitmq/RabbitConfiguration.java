@@ -76,7 +76,7 @@ public class RabbitConfiguration {
         return BindingBuilder.bind(repliesQueue()).to(exchange).with(Properties.getRabbitmqTopicExchangeRoutingKeyTwo());
     }
 
-    @Bean
+/*    @Bean
     SimpleMessageListenerContainer container(ConnectionFactory connectionFactory, MessageListenerAdapter listenerAdapter) {
         SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
@@ -88,7 +88,7 @@ public class RabbitConfiguration {
     @Bean
     MessageListenerAdapter listenerAdapter(Receiver receiver) {
         return new MessageListenerAdapter(receiver, "receiveMessage");
-    }
+    }*/
 
 
 }

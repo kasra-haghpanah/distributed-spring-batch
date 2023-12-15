@@ -1,4 +1,4 @@
-package com.example.batchprocessing.slave.configuration;
+package com.example.batchprocessing.slave.configuration.properties;
 
 import com.example.batchprocessing.slave.util.JavaUtil;
 import org.springframework.context.annotation.Configuration;
