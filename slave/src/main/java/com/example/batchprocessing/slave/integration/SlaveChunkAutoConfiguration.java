@@ -5,9 +5,7 @@ import com.example.batchprocessing.slave.configuration.properties.Properties;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.core.AmqpTemplate;
-import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.batch.integration.chunk.RemoteChunkingWorkerBuilder;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemWriter;
@@ -15,7 +13,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.integration.amqp.dsl.Amqp;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.dsl.IntegrationFlow;
@@ -31,24 +28,6 @@ import java.util.List;
 @ConditionalOnProperty(value = "bootiful.batch.chunk.slave", havingValue = "true")
 class SlaveChunkAutoConfiguration {
 
-
-    @Bean
-    @Primary
-    @Qualifier("rabbitMQConnectionFactory")
-    ConnectionFactory connectionFactory() {
-        CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
-        connectionFactory.setAddresses(Properties.getRabbitmqHost());
-        connectionFactory.setPort(Properties.getRabbitmqPort());
-        connectionFactory.setUsername(Properties.getRabbitmqUsername());
-        connectionFactory.setPassword(Properties.getRabbitmqPassword());
-        return connectionFactory;
-    }
-
-    @Bean
-    @Primary
-    AmqpTemplate amqpTemplate(ConnectionFactory connectionFactory) {
-        return new RabbitTemplate(connectionFactory);
-    }
 
     @Bean
     @Qualifier("slaveInboundChunkChannel")
