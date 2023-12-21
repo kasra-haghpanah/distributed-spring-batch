@@ -5,10 +5,6 @@ import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.support.converter.DefaultClassMapper;
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
-import org.springframework.amqp.support.converter.MessageConverter;
-import org.springframework.batch.integration.chunk.ChunkRequest;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,11 +37,11 @@ public class RabbitConfiguration {
     @Primary
     public AmqpTemplate amqpTemplate(ConnectionFactory connectionFactory) {
         RabbitTemplate  amqpTemplate = new RabbitTemplate(connectionFactory);
-        amqpTemplate.setMessageConverter(jsonToMapMessageConverter());
+        //amqpTemplate.setMessageConverter(jsonToMapMessageConverter());
         return amqpTemplate;
     }
 
-    @Bean
+/*    @Bean
     @Primary
     public MessageConverter jsonToMapMessageConverter() {
         DefaultClassMapper defaultClassMapper = new DefaultClassMapper();
@@ -55,7 +51,7 @@ public class RabbitConfiguration {
         //jackson2JsonMessageConverter.setClassMapper(new ImporterClassMapper(FileUploadMessage.class));
         jackson2JsonMessageConverter.setClassMapper(defaultClassMapper);
         return jackson2JsonMessageConverter;
-    }
+    }*/
 
 
 }

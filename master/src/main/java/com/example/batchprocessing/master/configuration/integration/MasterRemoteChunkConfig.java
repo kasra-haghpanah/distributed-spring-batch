@@ -6,7 +6,9 @@ import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
+import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.integration.chunk.ChunkMessageChannelItemWriter;
+import org.springframework.batch.integration.chunk.RemoteChunkingManagerStepBuilderFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -18,13 +20,14 @@ import org.springframework.integration.channel.QueueChannel;
 import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.MessageChannels;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import java.util.Set;
 
 @Configuration
 @ConditionalOnProperty(value = "bootiful.batch.chunk.master", havingValue = "true")
-@ImportRuntimeHints(MasterChunkAutoConfiguration.Hints.class)
-class MasterChunkAutoConfiguration {
+@ImportRuntimeHints(MasterRemoteChunkConfig.Hints.class)
+class MasterRemoteChunkConfig {
 
     static class Hints implements RuntimeHintsRegistrar {
 
@@ -34,6 +37,12 @@ class MasterChunkAutoConfiguration {
                     .forEach(c -> hints.reflection().registerType(c, MemberCategory.values()));
         }
 
+    }
+
+    @Bean
+    @Qualifier("chunkingManagerStepBuilderFactory")
+    RemoteChunkingManagerStepBuilderFactory chunkingMasterStepBuilderFactory(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
+        return new RemoteChunkingManagerStepBuilderFactory(jobRepository, transactionManager);
     }
 
     /*
@@ -71,59 +80,5 @@ class MasterChunkAutoConfiguration {
                 .channel(in)//
                 .get();
     }
-
-/*    @Bean
-    @ConditionalOnMissingBean
-    @Qualifier("masterChunkMessagingTemplate")
-    MessagingTemplate masterChunkMessagingTemplate(@Qualifier("masterOutboundChunkChannel") DirectChannel masterRequestsMessageChannel) {
-        var template = new MessagingTemplate();
-        template.setDefaultChannel(masterRequestsMessageChannel);
-        template.setReceiveTimeout(2000);
-        return template;
-    }*/
-
-/*    @Bean
-    @ConditionalOnMissingBean
-    RemoteChunkHandlerFactoryBean<Object> masterChunkHandler(
-            ChunkMessageChannelItemWriter<Object> chunkMessageChannelItemWriterProxy,
-            //@Qualifier("yearReportStep") TaskletStep step
-            @Qualifier("managerStep") TaskletStep managerStep
-    ) {
-        var remoteChunkHandlerFactoryBean = new RemoteChunkHandlerFactoryBean<>();
-        remoteChunkHandlerFactoryBean.setChunkWriter(chunkMessageChannelItemWriterProxy);
-        remoteChunkHandlerFactoryBean.setStep(managerStep);
-        return remoteChunkHandlerFactoryBean;
-    }*/
-
-/*    @Bean
-    @Qualifier("masterChunkItemWriter")
-        // @StepScope
-    ChunkMessageChannelItemWriter<?> masterChunkMessageChannelItemWriter(
-            @Qualifier("masterChunkMessagingTemplate") MessagingTemplate template,
-            @Qualifier("masterInboundChunkChannel") QueueChannel masterRepliesMessageChannel
-    ) {
-
-        ChunkMessageChannelItemWriter<Integer> chunkMessageChannelItemWriter = new ChunkMessageChannelItemWriter<>();
-        chunkMessageChannelItemWriter.setMessagingOperations(template);
-        chunkMessageChannelItemWriter.setReplyChannel(masterRepliesMessageChannel);
-        return chunkMessageChannelItemWriter;
-    }*/
-
-
-
-
-    // todo connect this with rabbitmq or kafka or something real so I can setup a worker node
-    //@Bean
-/*    IntegrationFlow chunkIntegrationFlow(){
-        return IntegrationFlow
-                .from(requests())
-                .handle(message ->{
-                    if(message.getPayload() instanceof ChunkRequest<?> chunkRequest){
-                        var chunkResponse = new ChunkResponse(chunkRequest.getSequence(), chunkRequest.getJobId(), chunkRequest.getStepContribution());
-                        replies().send(MessageBuilder.withPayload(chunkResponse).build());
-                    }
-                })
-                .get();
-    }*/
 
 }

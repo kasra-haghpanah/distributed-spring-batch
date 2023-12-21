@@ -2,13 +2,12 @@ package com.example.batchprocessing.slave.integration;
 
 import com.example.batchprocessing.slave.configuration.jackson.Customer;
 import com.example.batchprocessing.slave.configuration.properties.Properties;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.batch.integration.chunk.RemoteChunkingWorkerBuilder;
+import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -19,7 +18,6 @@ import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.MessageChannels;
 import org.springframework.messaging.MessageChannel;
 
-import java.text.MessageFormat;
 import java.util.List;
 
 //@EnableBatchIntegration
@@ -80,7 +78,7 @@ class SlaveChunkAutoConfiguration {
     ) {
         return workerBuilder
                 .itemProcessor(itemProcessor)
-                .itemWriter(itemWriter)
+                .itemWriter(this::itemWriter)
                 .inputChannel(inbound) // requests received from the manager
                 .outputChannel(outbound) // replies sent to the manager
                 .build();
@@ -88,69 +86,18 @@ class SlaveChunkAutoConfiguration {
 
     @Bean
     @Qualifier("slaveItemProcessor")
-    ItemProcessor<?, ?> itemProcessor(ObjectMapper objectMapper) {
+    ItemProcessor<?, Customer> itemProcessor(ObjectMapper objectMapper) {
         return item -> {
             System.out.println(item);
-
-            List<Customer> customers = null;
-            customers = objectMapper.readValue((String) item, new TypeReference<List<Customer>>() {
-            });
-
-            return customers;
+            Customer customer = objectMapper.readValue((String) item, Customer.class);
+            return customer;
         };
     }
-
-//    @Bean
-//    @Qualifier("slaveItemWriter")
-    ItemWriter<?> itemWriter = chunk -> {
+    public void itemWriter(Chunk<Customer> chunk) {
         System.out.println("doing the long-running writing thing");
-        List<?> items = chunk.getItems();
-        for (var i : items)
-            System.out.println(MessageFormat.format("i={0}", i));
-    };
-
-
-    // Middleware beans setup omitted
-
-/*    @Bean
-    @Qualifier("slaveChunkProcessorChunkHandler")
-    @ConditionalOnMissingBean
-    @SuppressWarnings("unchecked")
-    ChunkProcessorChunkHandler<?> slaveChunkProcessorChunkHandler(
-            // todo make this optional
-            // @Qualifier("slaveItemProcessor") ObjectProvider<ItemProcessor<Object, Object>> processor,
-            @Qualifier("slaveItemProcessor") ItemProcessor<?, ?> itemProcessor,
-            @Qualifier("slaveItemWriter") ItemWriter<?> itemWriter
-    ) {
-        var chunkProcessorChunkHandler = new ChunkProcessorChunkHandler<>();
-        chunkProcessorChunkHandler.setChunkProcessor(new SimpleChunkProcessor(itemProcessor, itemWriter));
-        return chunkProcessorChunkHandler;
+        List<Customer> items = chunk.getItems();
+        for (var customer : items)
+            System.out.println("itemWriter => " + customer);
     }
-
-    // todo connect this with rabbitmq or kafka or something real so I can setup a worker node
-    @Bean
-    @SuppressWarnings("unchecked")
-    IntegrationFlow chunkProcessorChunkHandlerIntegrationFlow(
-            @Qualifier("slaveChunkProcessorChunkHandler") ChunkProcessorChunkHandler<Object> chunkProcessorChunkHandler,
-            @Qualifier("slaveInboundChunkChannel") DirectChannel inbound//,
-            //@Qualifier("slaveOutboundChunkChannel") DirectChannel outbound
-    ) {
-        return IntegrationFlow//
-                .from(inbound)//
-                .handle(message -> {
-                    try {
-                        var payload = message.getPayload();
-                        if (payload instanceof ChunkRequest<?> cr) {
-                            var chunkResponse = chunkProcessorChunkHandler.handleChunk((ChunkRequest<Object>) cr);
-                            outbound.send(MessageBuilder.withPayload(chunkResponse).build());
-                        }
-                        Assert.state(payload instanceof ChunkRequest<?>, "the payload must be an instance of ChunkRequest!");
-                    } //
-                    catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                })//
-                .get();
-    }*/
 
 }

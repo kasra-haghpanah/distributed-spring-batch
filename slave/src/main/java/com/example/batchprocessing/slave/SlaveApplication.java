@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class SlaveApplication {
 
     public static void main(String[] args) {
+        System.setProperty("spring.amqp.deserialization.trust.all","true");
         SpringApplication.run(SlaveApplication.class, args);
     }
 

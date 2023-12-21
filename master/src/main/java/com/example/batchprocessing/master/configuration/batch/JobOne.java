@@ -16,6 +16,8 @@ import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.core.step.tasklet.TaskletStep;
 import org.springframework.batch.integration.chunk.ChunkMessageChannelItemWriter;
+import org.springframework.batch.integration.chunk.RemoteChunkingManagerStepBuilderFactory;
+import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.database.JdbcPagingItemReader;
@@ -32,6 +34,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
+import org.springframework.integration.channel.DirectChannel;
+import org.springframework.integration.channel.QueueChannel;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -72,6 +76,24 @@ public class JobOne {
                 .next(managerStep)
                 .next(endStep) //.end().build();
                 .build()
+                .build();
+    }
+
+    @Bean
+    @Qualifier("managerStep")
+    public TaskletStep managerStep(
+            @Qualifier("masterInboundChunkChannel") QueueChannel inbound,
+            @Qualifier("masterOutboundChunkChannel") DirectChannel outbound,
+            @Qualifier("chunkingManagerStepBuilderFactory") RemoteChunkingManagerStepBuilderFactory managerStepBuilderFactory,
+            @Qualifier("masterItemReader") ListItemReader<Customer> itemReader,
+            @Qualifier("masterItemProcessor") ItemProcessor<Object, Object> itemProcessor
+    ) {
+        return managerStepBuilderFactory.get("managerStep")
+                .<Customer,String>chunk(3)
+                .reader(itemReader)
+                .processor(itemProcessor)
+                .outputChannel(outbound) // requests sent to workers
+                .inputChannel(inbound)   // replies received from workers
                 .build();
     }
 
