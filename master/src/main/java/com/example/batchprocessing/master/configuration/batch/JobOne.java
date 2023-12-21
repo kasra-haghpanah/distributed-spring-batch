@@ -84,7 +84,7 @@ public class JobOne {
     public TaskletStep managerStep(
             @Qualifier("masterInboundChunkChannel") QueueChannel inbound,
             @Qualifier("masterOutboundChunkChannel") DirectChannel outbound,
-            @Qualifier("chunkingManagerStepBuilderFactory") RemoteChunkingManagerStepBuilderFactory managerStepBuilderFactory,
+            RemoteChunkingManagerStepBuilderFactory managerStepBuilderFactory,
             @Qualifier("masterItemReader") ListItemReader<Customer> itemReader,
             @Qualifier("masterItemProcessor") ItemProcessor<Object, Object> itemProcessor
     ) {

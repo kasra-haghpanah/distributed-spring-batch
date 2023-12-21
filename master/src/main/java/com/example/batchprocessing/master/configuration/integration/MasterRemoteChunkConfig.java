@@ -40,7 +40,6 @@ class MasterRemoteChunkConfig {
     }
 
     @Bean
-    @Qualifier("chunkingManagerStepBuilderFactory")
     RemoteChunkingManagerStepBuilderFactory chunkingMasterStepBuilderFactory(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
         return new RemoteChunkingManagerStepBuilderFactory(jobRepository, transactionManager);
     }

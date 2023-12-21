@@ -64,14 +64,13 @@ class SlaveChunkAutoConfiguration {
 
 
     @Bean
-    @Qualifier("remoteChunkingWorkerBuilder")
     RemoteChunkingWorkerBuilder remoteChunkingWorkerBuilder() {
         return new RemoteChunkingWorkerBuilder();
     }
 
     @Bean
     public IntegrationFlow workerFlow(
-            @Qualifier("remoteChunkingWorkerBuilder") RemoteChunkingWorkerBuilder workerBuilder,
+            RemoteChunkingWorkerBuilder workerBuilder,
             @Qualifier("slaveInboundChunkChannel") DirectChannel inbound,
             @Qualifier("slaveOutboundChunkChannel") DirectChannel outbound,
             @Qualifier("slaveItemProcessor") ItemProcessor<?, ?> itemProcessor

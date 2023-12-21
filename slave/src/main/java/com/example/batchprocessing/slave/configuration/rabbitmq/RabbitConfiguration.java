@@ -37,21 +37,7 @@ public class RabbitConfiguration {
     @Primary
     public AmqpTemplate amqpTemplate(ConnectionFactory connectionFactory) {
         RabbitTemplate  amqpTemplate = new RabbitTemplate(connectionFactory);
-        //amqpTemplate.setMessageConverter(jsonToMapMessageConverter());
         return amqpTemplate;
     }
-
-/*    @Bean
-    @Primary
-    public MessageConverter jsonToMapMessageConverter() {
-        DefaultClassMapper defaultClassMapper = new DefaultClassMapper();
-        defaultClassMapper.setTrustedPackages("org.springframework.batch.integration.chunk.*"); // trusted packages
-        defaultClassMapper.setDefaultMapClass(ChunkRequest.class);
-        Jackson2JsonMessageConverter jackson2JsonMessageConverter = new Jackson2JsonMessageConverter();
-        //jackson2JsonMessageConverter.setClassMapper(new ImporterClassMapper(FileUploadMessage.class));
-        jackson2JsonMessageConverter.setClassMapper(defaultClassMapper);
-        return jackson2JsonMessageConverter;
-    }*/
-
 
 }
