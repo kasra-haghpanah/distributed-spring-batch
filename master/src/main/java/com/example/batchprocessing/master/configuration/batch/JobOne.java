@@ -68,11 +68,11 @@ public class JobOne {
         return new JobBuilder("jobSampleOne", jobRepository)
                 .incrementer(new RunIdIncrementer())
                 .start(stepOne)
-                .next(gameByYearStep).on(EMPTY_CSV_STATUS).to(errorStep)  //
-                .from(gameByYearStep).on("*").to(yearPlatformReportStep) //
-                .next(yearReportStep)
-                .next(managerStep)
-                .next(endStep) //.end().build();
+                .next(gameByYearStep).on(EMPTY_CSV_STATUS).to(errorStep)
+                .from(gameByYearStep).on("*").to(yearPlatformReportStep)
+                .next(managerStep)// remoteChunk
+                .next(yearReportStep)// remoteChunk
+                .next(endStep)
                 .build()
                 .build();
     }
@@ -180,14 +180,6 @@ public class JobOne {
                 .<CsvRow, CsvRow>chunk(100, transactionManager)
                 .reader(gameByYearReader)
                 .writer(gameByYearWriter)
-/*                .reader(() -> {
-                    return lines;
-                })
-                .writer((chunk) -> {
-                    List<ReadFileAsStream.CsvRow> oneHundredReadRows = (List<ReadFileAsStream.CsvRow>) chunk.getItems();
-                    System.out.println(oneHundredReadRows.size());
-
-                })*/
                 .listener(new StepExecutionListener() {
                     @Override
                     public void beforeStep(StepExecution stepExecution) {
@@ -358,6 +350,8 @@ public class JobOne {
             @Qualifier("yearPlatformSalesItemReader") ItemReader<YearReport> itemReader,
             @Qualifier("masterOutboundYearReport") DirectChannel outbound,
             @Qualifier("masterInboundYearReport") QueueChannel inbound,
+            PlatformTransactionManager platformTransactionManager,
+            @Qualifier("batchDestinationJdbcTemplate") JdbcTemplate jdbcTemplate,
             ObjectMapper objectMapper
     ) {
 
@@ -369,6 +363,21 @@ public class JobOne {
                 })
                 .outputChannel(outbound) // requests sent to workers
                 .inputChannel(inbound)   // replies received from workers
+                .transactionManager(platformTransactionManager)
+                .listener(new StepExecutionListener() {
+                    @Override
+                    public void beforeStep(StepExecution stepExecution) {
+                        System.out.println(MessageFormat.format("yearReportStep is {0}.", stepExecution.getStepName()));
+                    }
+
+                    @Override
+                    public ExitStatus afterStep(StepExecution stepExecution) {
+                        Integer count = Objects.requireNonNull(jdbcTemplate.queryForObject("SELECT coalesce(count(*) ,0) FROM remote_year_platform_report", Integer.class));
+                        ExitStatus status = count == 0 ? new ExitStatus(EMPTY_CSV_STATUS) : ExitStatus.COMPLETED;
+                        System.out.println("the status is " + status);
+                        return status;
+                    }
+                })
                 .build();
     }
 

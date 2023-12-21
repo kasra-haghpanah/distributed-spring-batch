@@ -29,34 +29,6 @@ public class JobLauncherApp {
     private final JobRepository jobRepository;
     ///private final JobLauncher jobLauncher;
 
-    public static final String videoGameSalesTableScript = """
-            CREATE TABLE IF NOT EXISTS video_game_sales
-            (
-                `rank`         int,
-                `name`         text NOT NULL,
-                `platform`     text NOT NULL,
-                `year`         int,
-                `genre`        text NOT NULL,
-                `publisher`    text,
-                `na_sales`     numeric(4,2),
-                `eu_sales`     numeric(4,2),
-                `jp_sales`     numeric(4,2),
-                `other_sales`  numeric(4,2),
-                `global_sales` numeric(4,2),
-                PRIMARY KEY (`name`(100), `platform`(100), `year`, `genre`(100))
-            )
-            """;
-    public static final String yearPlatformReportTableScript = """
-            CREATE TABLE IF NOT EXISTS year_platform_report
-            (
-                year     int,
-                platform text,
-                sales    numeric(8, 2),
-                unique (year, platform)
-            );
-            """;
-
-
     public JobLauncherApp(
             @Qualifier("batchDestinationJdbcTemplate") JdbcTemplate jdbcTemplate,
             JobRepository jobRepository
