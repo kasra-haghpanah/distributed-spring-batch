@@ -5,22 +5,11 @@ import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
-import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Primary;
-import org.springframework.integration.channel.DirectChannel;
-import org.springframework.integration.channel.QueueChannel;
-import org.springframework.integration.core.MessagingTemplate;
-import org.springframework.integration.dsl.MessageChannels;
-import org.springframework.messaging.MessageChannel;
-import org.springframework.messaging.PollableChannel;
-
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 
 /**
  * installs all the infrastructure for RabbitMQ
@@ -47,39 +36,54 @@ public class RabbitConfiguration {
     public AmqpTemplate amqpTemplate(ConnectionFactory connectionFactory) {
         return new RabbitTemplate(connectionFactory);
     }
-
-    @Bean
-    @Qualifier("requestQueue")
-    Queue requestQueue() {
-        return new org.springframework.amqp.core.Queue(Properties.getRabbitmqQueueOne(), false);
-    }
-
-    @Bean
-    @Qualifier("repliesQueue")
-    Queue repliesQueue() {
-        return new Queue(Properties.getRabbitmqQueueTwo(), false);
-    }
-
     @Bean
     TopicExchange exchange() {
         return new TopicExchange(Properties.getRabbitmqTopicExchange());
     }
-
     @Bean
-    Binding requestBinding(TopicExchange exchange) {
-        return BindingBuilder.bind(requestQueue()).to(exchange).with(Properties.getRabbitmqTopicExchangeRoutingKeyOne());
+    @Qualifier("customerRequestQueue")
+    Queue customerRequestQueue() {
+        return new Queue(Properties.getRabbitmqQueueOne(), false);
+    }
+    @Bean
+    @Qualifier("customerReplieQueue")
+    Queue customerReplieQueue() {
+        return new Queue(Properties.getRabbitmqQueueTwo(), false);
     }
 
     @Bean
-    Binding repliesBinding(TopicExchange exchange) {
-        return BindingBuilder.bind(repliesQueue()).to(exchange).with(Properties.getRabbitmqTopicExchangeRoutingKeyTwo());
+    @Qualifier("yearReportRequestQueue")
+    Queue yearReportRequestQueue() {
+        return new Queue(Properties.getRabbitmqQueueThree(), false);
+    }
+    @Bean
+    @Qualifier("yearReportReplieQueue")
+    Queue yearReportReplieQueue() {
+        return new Queue(Properties.getRabbitmqQueueFour(), false);
+    }
+    @Bean
+    Binding customerRequestBinding(TopicExchange exchange) {
+        return BindingBuilder.bind(customerRequestQueue()).to(exchange).with(Properties.getRabbitmqQueueOne());
+    }
+    @Bean
+    Binding customerReplieBinding(TopicExchange exchange) {
+        return BindingBuilder.bind(customerReplieQueue()).to(exchange).with(Properties.getRabbitmqQueueTwo());
+    }
+
+    @Bean
+    Binding yearReportRequestBinding(TopicExchange exchange) {
+        return BindingBuilder.bind(yearReportRequestQueue()).to(exchange).with(Properties.getRabbitmqQueueThree());
+    }
+    @Bean
+    Binding yearReportReplieBinding(TopicExchange exchange) {
+        return BindingBuilder.bind(yearReportReplieQueue()).to(exchange).with(Properties.getRabbitmqQueueFour());
     }
 
 /*    @Bean
     SimpleMessageListenerContainer container(ConnectionFactory connectionFactory, MessageListenerAdapter listenerAdapter) {
         SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
-        container.setQueueNames(Properties.getRabbitmqTopicExchangeRoutingKeyOne(), Properties.getRabbitmqTopicExchangeRoutingKeyTwo());
+        container.setQueueNames(Properties.getRabbitmqQueueOne(), Properties.getRabbitmqQueueTwo());
         container.setMessageListener(listenerAdapter);
         return container;
     }

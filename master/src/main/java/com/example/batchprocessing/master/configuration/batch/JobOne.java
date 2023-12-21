@@ -15,15 +15,12 @@ import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.core.step.tasklet.TaskletStep;
-import org.springframework.batch.integration.chunk.ChunkMessageChannelItemWriter;
 import org.springframework.batch.integration.chunk.RemoteChunkingManagerStepBuilderFactory;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
-import org.springframework.batch.item.database.JdbcPagingItemReader;
 import org.springframework.batch.item.database.Order;
 import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
-import org.springframework.batch.item.database.builder.JdbcCursorItemReaderBuilder;
 import org.springframework.batch.item.database.builder.JdbcPagingItemReaderBuilder;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
@@ -37,12 +34,13 @@ import org.springframework.core.io.Resource;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.channel.QueueChannel;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.sql.DataSource;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.*;
 
@@ -63,7 +61,7 @@ public class JobOne {
             @Qualifier("gameByYearStep") Step gameByYearStep,
             @Qualifier("errorStep") Step errorStep,
             @Qualifier("yearPlatformReportStep") Step yearPlatformReportStep,
-            //@Qualifier("yearReportStep") TaskletStep yearReportStep,
+            @Qualifier("yearReportStep") TaskletStep yearReportStep,
             @Qualifier("managerStep") TaskletStep managerStep,
             @Qualifier("endStep") Step endStep
     ) {
@@ -72,30 +70,13 @@ public class JobOne {
                 .start(stepOne)
                 .next(gameByYearStep).on(EMPTY_CSV_STATUS).to(errorStep)  //
                 .from(gameByYearStep).on("*").to(yearPlatformReportStep) //
-                //.next(yearReportStep)
+                .next(yearReportStep)
                 .next(managerStep)
                 .next(endStep) //.end().build();
                 .build()
                 .build();
     }
 
-    @Bean
-    @Qualifier("managerStep")
-    public TaskletStep managerStep(
-            @Qualifier("masterInboundChunkChannel") QueueChannel inbound,
-            @Qualifier("masterOutboundChunkChannel") DirectChannel outbound,
-            RemoteChunkingManagerStepBuilderFactory managerStepBuilderFactory,
-            @Qualifier("masterItemReader") ListItemReader<Customer> itemReader,
-            @Qualifier("masterItemProcessor") ItemProcessor<Object, Object> itemProcessor
-    ) {
-        return managerStepBuilderFactory.get("managerStep")
-                .<Customer,String>chunk(3)
-                .reader(itemReader)
-                .processor(itemProcessor)
-                .outputChannel(outbound) // requests sent to workers
-                .inputChannel(inbound)   // replies received from workers
-                .build();
-    }
 
     @Bean
     @StepScope
@@ -285,8 +266,40 @@ public class JobOne {
                 .build();
     }
 
+    @Bean
+    @Qualifier("managerItemReader")
+    public ListItemReader<Customer> managerItemReader() {
+        return new ListItemReader<Customer>(Arrays.asList(new Customer("Dave"), new Customer("Michael"), new Customer("Mahmoud")));
+    }
 
-    private final RowMapper<YearReport> rowMapper = (rs, rowNum) -> {
+    @Bean
+    @Qualifier("managerItemProcessor")
+    public ItemProcessor<Object, Object> managerItemProcessor(ObjectMapper objectMapper) {
+        return (customer) -> {
+            return objectMapper.writeValueAsString(customer);
+        };
+    }
+
+    @Bean // remoteChunk
+    @Qualifier("managerStep")
+    public TaskletStep managerStep(
+            RemoteChunkingManagerStepBuilderFactory managerStepBuilderFactory,
+            @Qualifier("managerItemReader") ListItemReader<Customer> managerItemReader,
+            @Qualifier("managerItemProcessor") ItemProcessor<Object, Object> managerItemProcessor,
+            @Qualifier("masterOutboundCustomerRequest") DirectChannel outbound,
+            @Qualifier("masterInboundCustomerReply") QueueChannel inbound
+    ) {
+        return managerStepBuilderFactory.get("managerStep")
+                .<Customer, String>chunk(2)
+                .reader(managerItemReader)
+                .processor(managerItemProcessor)
+                .outputChannel(outbound) // requests sent to workers
+                .inputChannel(inbound)   // replies received from workers
+                .build();
+    }
+
+
+    public static YearReport rowMapper(ResultSet rs, int rowNum) throws SQLException {
         Integer year = rs.getInt("year");
         if (!JobCompletedListener.reportMap.containsKey(year)) {
             JobCompletedListener.reportMap.put(year, new YearReport(year, new ArrayList<YearPlatformSales>()));
@@ -294,7 +307,7 @@ public class JobOne {
         YearReport yr = JobCompletedListener.reportMap.get(year);
         yr.breakout().add(new YearPlatformSales(rs.getInt("year"), rs.getString("platform"), rs.getFloat("sales")));
         return yr;
-    };
+    }
 
     @Bean
     @StepScope
@@ -323,7 +336,7 @@ public class JobOne {
                 .fromClause("FROM year_platform_report ypr")
                 .whereClause("WHERE ypr.year != :statusCode")
                 .sortKeys(Map.of("year", Order.ASCENDING))
-                .rowMapper(rowMapper)
+                .rowMapper(JobOne::rowMapper)
                 .pageSize(100)
                 .parameterValues(parameterValues)
                 .build();
@@ -338,41 +351,24 @@ public class JobOne {
     }
 
 
-   // @Bean
-    //@Qualifier("yearReportStep")
+    @Bean // remoteChunk
+    @Qualifier("yearReportStep")
     public TaskletStep yearReportStep(
-            JobRepository repository,
-            PlatformTransactionManager transactionManager,
-            @Qualifier("yearPlatformSalesItemReader") ItemReader<YearReport> yearPlatformSalesItemReader,
-            //@Qualifier("masterChunkItemWriter") ChunkMessageChannelItemWriter<String> chunkMessageChannelItemWriter,
-            @Qualifier("jsonMapper") ObjectMapper objectMapper
+            RemoteChunkingManagerStepBuilderFactory managerStepBuilderFactory,
+            @Qualifier("yearPlatformSalesItemReader") ItemReader<YearReport> itemReader,
+            @Qualifier("masterOutboundYearReport") DirectChannel outbound,
+            @Qualifier("masterInboundYearReport") QueueChannel inbound,
+            ObjectMapper objectMapper
     ) {
 
-        var listItemReader = new ListItemReader<>(List.of(
-                new Customer("Dave"),
-                new Customer("Michael"),
-                new Customer("Mahmoud")
-        )
-        );
-
-
-        return new StepBuilder("yearReportStep", repository)
-                //.<YearReport, String>chunk(100, transactionManager)
-                //.reader(yearPlatformSalesItemReader)
-                .<Customer, String>chunk(100, transactionManager)
-                .reader(listItemReader)
+        return managerStepBuilderFactory.get("yearReportStep")
+                .<YearReport, String>chunk(100)
+                .reader(itemReader)
                 .processor((yearReport) -> {
                     return objectMapper.writeValueAsString(yearReport);
                 })
-               // .writer(chunkMessageChannelItemWriter)
-/*                .writer(chunk -> {
-                    var set = new LinkedHashSet<YearReport>();
-                    set.addAll(chunk.getItems());
-                    System.out.println("------------------------------");
-                    set.forEach(r -> {
-                        System.out.println(r.toString());
-                    });
-                })*/
+                .outputChannel(outbound) // requests sent to workers
+                .inputChannel(inbound)   // replies received from workers
                 .build();
     }
 

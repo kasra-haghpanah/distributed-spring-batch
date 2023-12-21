@@ -30,12 +30,11 @@ public class Properties {
         config.put("rabbitmq.username", environment.getProperty("rabbitmq.username"));
         config.put("rabbitmq.password", environment.getProperty("rabbitmq.password"));
 
-
+        config.put("rabbitmq.topic-exchange", environment.getProperty("rabbitmq.topic-exchange"));
         config.put("rabbitmq.queue-one", environment.getProperty("rabbitmq.queue-one"));
         config.put("rabbitmq.queue-two", environment.getProperty("rabbitmq.queue-two"));
-        config.put("rabbitmq.topic-exchange", environment.getProperty("rabbitmq.topic-exchange"));
-        config.put("rabbitmq.topic-exchange-routing-key-one", environment.getProperty("rabbitmq.topic-exchange-routing-key-one"));
-        config.put("rabbitmq.topic-exchange-routing-key-two", environment.getProperty("rabbitmq.topic-exchange-routing-key-two"));
+        config.put("rabbitmq.queue-three", environment.getProperty("rabbitmq.queue-three"));
+        config.put("rabbitmq.queue-four", environment.getProperty("rabbitmq.queue-four"));
     }
 
     private static Object get(String key) {
@@ -102,24 +101,20 @@ public class Properties {
         return get("rabbitmq.password", String.class);
     }
 
-    public static String getRabbitmqQueueOne() {
-        return get("rabbitmq.queue-one", String.class);
-    }
-
-    public static String getRabbitmqQueueTwo() {
-        return get("rabbitmq.queue-two", String.class);
-    }
-
     public static String getRabbitmqTopicExchange() {
         return get("rabbitmq.topic-exchange", String.class);
     }
-
-    public static String getRabbitmqTopicExchangeRoutingKeyOne() {
-        return get("rabbitmq.topic-exchange-routing-key-one", String.class);
+    public static String getRabbitmqQueueOne() {
+        return get("rabbitmq.queue-one", String.class);
     }
-
-    public static String getRabbitmqTopicExchangeRoutingKeyTwo() {
-        return get("rabbitmq.topic-exchange-routing-key-two", String.class);
+    public static String getRabbitmqQueueTwo() {
+        return get("rabbitmq.queue-two", String.class);
+    }
+    public static String getRabbitmqQueueThree() {
+        return get("rabbitmq.queue-three", String.class);
+    }
+    public static String getRabbitmqQueueFour() {
+        return get("rabbitmq.queue-four", String.class);
     }
 
 }
