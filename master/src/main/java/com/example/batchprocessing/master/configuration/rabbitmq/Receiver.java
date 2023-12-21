@@ -1,6 +1,7 @@
 package com.example.batchprocessing.master.configuration.rabbitmq;
 
 import org.springframework.stereotype.Component;
+
 import java.nio.charset.StandardCharsets;
 
 @Component

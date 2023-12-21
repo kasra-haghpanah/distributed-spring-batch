@@ -24,43 +24,43 @@ import java.util.stream.Collectors;
 @ImportRuntimeHints(ChunkAutoConfiguration.Hints.class)
 class ChunkAutoConfiguration {
 
-	ChunkAutoConfiguration() {
-		System.out.println("running " + ChunkAutoConfiguration.class.getName());
-	}
+    ChunkAutoConfiguration() {
+        System.out.println("running " + ChunkAutoConfiguration.class.getName());
+    }
 
-	static class Hints implements RuntimeHintsRegistrar {
+    static class Hints implements RuntimeHintsRegistrar {
 
-		@Override
-		public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
-			var classLiterals = Set.of(
-					// batch
-					JobParameters.class,
-					JobParameter.class, ChunkRequest.class, ExitStatus.class,
-					StepContribution.class, JobExecution.class, Entity.class, ExecutionContext.class,
-					StepExecution.class, ChunkResponse.class, Chunk.class, JobInstance.class,
+        @Override
+        public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
+            var classLiterals = Set.of(
+                    // batch
+                    JobParameters.class,
+                    JobParameter.class, ChunkRequest.class, ExitStatus.class,
+                    StepContribution.class, JobExecution.class, Entity.class, ExecutionContext.class,
+                    StepExecution.class, ChunkResponse.class, Chunk.class, JobInstance.class,
 
-					// jdk
+                    // jdk
 
-					java.util.LinkedHashSet.class, java.util.LinkedHashMap.class, HashSet.class,
-					ReentrantLock.class, ConcurrentHashMap.class, AbstractOwnableSynchronizer.class,
-					AbstractQueuedSynchronizer.class);
-			var classStrings = Set.of(
-					// jdk
-					"java.time.Ser", "java.util.Collections$SynchronizedSet",
-					"java.util.Collections$SynchronizedCollection", "java.util.concurrent.locks.ReentrantLock$Sync",
-					"java.util.concurrent.locks.ReentrantLock$FairSync",
-					"java.util.concurrent.locks.ReentrantLock$NonfairSync",
-					"java.util.concurrent.ConcurrentHashMap$Segment");
-			var all = new HashSet<String>();
-			all.addAll(classLiterals.stream().map(Class::getName).collect(Collectors.toSet()));
-			all.addAll(classStrings);
+                    java.util.LinkedHashSet.class, java.util.LinkedHashMap.class, HashSet.class,
+                    ReentrantLock.class, ConcurrentHashMap.class, AbstractOwnableSynchronizer.class,
+                    AbstractQueuedSynchronizer.class);
+            var classStrings = Set.of(
+                    // jdk
+                    "java.time.Ser", "java.util.Collections$SynchronizedSet",
+                    "java.util.Collections$SynchronizedCollection", "java.util.concurrent.locks.ReentrantLock$Sync",
+                    "java.util.concurrent.locks.ReentrantLock$FairSync",
+                    "java.util.concurrent.locks.ReentrantLock$NonfairSync",
+                    "java.util.concurrent.ConcurrentHashMap$Segment");
+            var all = new HashSet<String>();
+            all.addAll(classLiterals.stream().map(Class::getName).collect(Collectors.toSet()));
+            all.addAll(classStrings);
 
-			var typeReferences = all.stream().map(TypeReference::of).collect(Collectors.toSet());
-			typeReferences.forEach(c -> hints.serialization().registerType(c));
-			typeReferences.forEach(c -> hints.reflection().registerType(c, MemberCategory.values()));
+            var typeReferences = all.stream().map(TypeReference::of).collect(Collectors.toSet());
+            typeReferences.forEach(c -> hints.serialization().registerType(c));
+            typeReferences.forEach(c -> hints.reflection().registerType(c, MemberCategory.values()));
 
-		}
+        }
 
-	}
+    }
 
 }

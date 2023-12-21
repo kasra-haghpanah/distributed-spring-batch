@@ -1,6 +1,5 @@
 package com.example.batchprocessing.master.configuration.listener;
 
-import com.example.batchprocessing.master.configuration.properties.Properties;
 import com.example.batchprocessing.master.configuration.rabbitmq.Receiver;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -8,8 +7,6 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.jdbc.core.JdbcTemplate;
-
-import java.nio.charset.StandardCharsets;
 
 @DependsOn("properties")
 @CoffeeSoftwareComponent
