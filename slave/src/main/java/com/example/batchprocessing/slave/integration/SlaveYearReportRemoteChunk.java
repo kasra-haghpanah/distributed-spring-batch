@@ -52,15 +52,16 @@ public class SlaveYearReportRemoteChunk {
                 .dataSource(dataSource)
                 .itemSqlParameterSourceProvider((yearReport) -> {
                     Map<String, Object> map = new HashMap<String, Object>();
-                    YearPlatformSales yearPlatformSales = null;
-                    if (yearReport.breakout().iterator().hasNext()){
-                        yearPlatformSales = yearReport.breakout().iterator().next();
-                    }
+                    map.putAll(Map.of("year", yearReport.year()));
+
+                    if (yearReport.breakout().iterator().hasNext()) {
+                        YearPlatformSales yearPlatformSales = yearReport.breakout().iterator().next();
                         map.putAll(Map.of(
-                                "year", yearReport.year(),
                                 "platform", yearPlatformSales.platform().trim(),
                                 "sales", yearPlatformSales.sales()
                         ));
+                    }
+
                     return new MapSqlParameterSource(map);
                 })
                 .build();
