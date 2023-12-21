@@ -287,6 +287,19 @@ public class JobOne {
                 .processor(managerItemProcessor)
                 .outputChannel(outbound) // requests sent to workers
                 .inputChannel(inbound)   // replies received from workers
+                .listener(new StepExecutionListener() {
+                    @Override
+                    public void beforeStep(StepExecution stepExecution) {
+                        System.out.println(MessageFormat.format("yearReportStep is {0}.", stepExecution.getStepName()));
+                    }
+
+                    @Override
+                    public ExitStatus afterStep(StepExecution stepExecution) {
+                        ExitStatus status = ExitStatus.COMPLETED;
+                        System.out.println("the status is " + status);
+                        return status;
+                    }
+                })
                 .build();
     }
 
