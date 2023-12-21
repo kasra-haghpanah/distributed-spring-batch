@@ -92,11 +92,13 @@ class SlaveChunkAutoConfiguration {
             return customer;
         };
     }
+
     public void itemWriter(Chunk<Customer> chunk) {
         System.out.println("doing the long-running writing thing");
         List<Customer> items = chunk.getItems();
-        for (var customer : items)
+        for (var customer : items) {
             System.out.println("itemWriter => " + customer);
+        }
     }
 
 }
