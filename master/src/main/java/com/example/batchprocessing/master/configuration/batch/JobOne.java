@@ -318,15 +318,7 @@ public class JobOne {
     @StepScope
     @Qualifier("yearPlatformSalesItemReader")
     public ItemReader<YearReport> yearPlatformSalesItemReader(@Qualifier("dataSourceTwo") DataSource dataSource) {
-        /*var sql = """
-                SELECT year,
-                       ypr.platform,
-                       ypr.sales,
-                       (SELECT COUNT(yps.year) FROM year_platform_report yps WHERE yps.year = ypr.year ) 
-                FROM year_platform_report ypr
-                WHERE ypr.year != 0
-                ORDER BY year
-                """;*/
+
         Map<String, Object> parameterValues = new HashMap<>();
         parameterValues.put("statusCode", 0);
 
