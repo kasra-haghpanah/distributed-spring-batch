@@ -3,7 +3,10 @@ package com.example.batchprocessing.slave.integration;
 import com.example.batchprocessing.slave.configuration.properties.Properties;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.batch.core.explore.JobExplorer;
+import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.integration.chunk.RemoteChunkingWorkerBuilder;
+import org.springframework.batch.integration.partition.RemotePartitioningWorkerStepBuilderFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +24,13 @@ public class SlaveRemoteChunkConfig {
     RemoteChunkingWorkerBuilder remoteChunkingWorkerBuilder() {
         return new RemoteChunkingWorkerBuilder();
     }
+
+    @Bean
+    @Primary
+    RemotePartitioningWorkerStepBuilderFactory remotePartitioningWorkerStepBuilderFactory(JobRepository jobRepository, JobExplorer jobExplorer) {
+        return new RemotePartitioningWorkerStepBuilderFactory(jobRepository, jobExplorer);
+    }
+
     @Bean
     @Qualifier("slaveInboundCustomerRequest")
     DirectChannel slaveInboundCustomerRequest() {
@@ -74,6 +84,34 @@ public class SlaveRemoteChunkConfig {
         return IntegrationFlow //
                 .from(slaveOutboundYearReportReply())//
                 .handle(Amqp.outboundAdapter(template).routingKey(Properties.getRabbitmqQueueFour()))//replies
+                .get();
+    }
+
+    @Bean
+    @Qualifier("slaveInboundGameByYearRequest")
+    DirectChannel slaveInboundGameByYearRequest() {
+        return MessageChannels.direct().getObject();
+    }
+
+    @Bean
+    IntegrationFlow inboundAmqpGameByYearIntegrationFlow(ConnectionFactory connectionFactory) {
+        return IntegrationFlow//
+                .from(Amqp.inboundAdapter(connectionFactory, Properties.getRabbitmqQueueFive()))//requests
+                .channel(slaveInboundGameByYearRequest())//
+                .get();
+    }
+
+    @Bean
+    @Qualifier("slaveOutboundGameByYearReply")
+    DirectChannel slaveOutboundGameByYearReply() {
+        return MessageChannels.direct().getObject();
+    }
+
+    @Bean
+    IntegrationFlow outboundAmqpGameByYearIntegrationFlow(AmqpTemplate template) {
+        return IntegrationFlow //
+                .from(slaveOutboundGameByYearReply())//
+                .handle(Amqp.outboundAdapter(template).routingKey(Properties.getRabbitmqQueueSix()))//replies
                 .get();
     }
 

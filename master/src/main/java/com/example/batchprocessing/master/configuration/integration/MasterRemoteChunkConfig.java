@@ -6,14 +6,17 @@ import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
+import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.integration.chunk.ChunkMessageChannelItemWriter;
 import org.springframework.batch.integration.chunk.RemoteChunkingManagerStepBuilderFactory;
+import org.springframework.batch.integration.partition.RemotePartitioningManagerStepBuilderFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportRuntimeHints;
+import org.springframework.context.annotation.Primary;
 import org.springframework.integration.amqp.dsl.Amqp;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.channel.QueueChannel;
@@ -37,15 +40,25 @@ class MasterRemoteChunkConfig {
         }
 
     }
+
     @Bean
-    RemoteChunkingManagerStepBuilderFactory customerRemoteChunkingManager(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
+    @Primary
+    RemoteChunkingManagerStepBuilderFactory remoteChunkingManagerStepBuilderFactory(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
         return new RemoteChunkingManagerStepBuilderFactory(jobRepository, transactionManager);
     }
+
+    @Bean
+    @Primary
+    RemotePartitioningManagerStepBuilderFactory remotePartitioningManagerStepBuilderFactory(JobRepository jobRepository, JobExplorer jobExplorer) {
+        return new RemotePartitioningManagerStepBuilderFactory(jobRepository, jobExplorer);
+    }
+
     @Bean // Configure outbound flow (requests going to workers)
     @Qualifier("masterOutboundCustomerRequest")
     DirectChannel masterCustomerRequestMessageChannel() {
         return MessageChannels.direct().getObject();
     }
+
     @Bean
     IntegrationFlow outboundCustomerIntegrationFlow(AmqpTemplate amqpTemplate) {
         return IntegrationFlow //
@@ -53,11 +66,13 @@ class MasterRemoteChunkConfig {
                 .handle(Amqp.outboundAdapter(amqpTemplate).routingKey(Properties.getRabbitmqQueueOne()))//requests
                 .get();
     }
+
     @Bean // Configure inbound flow (replies coming from workers)
     @Qualifier("masterInboundCustomerReply")
     QueueChannel masterCustomerReplieMessageChannel() {
         return MessageChannels.queue().getObject();
     }
+
     @Bean
     IntegrationFlow inboundCustomerIntegrationFlow(ConnectionFactory connectionFactory) {
         return IntegrationFlow//
@@ -71,6 +86,7 @@ class MasterRemoteChunkConfig {
     DirectChannel masterYearReportRequestMessageChannel() {
         return MessageChannels.direct().getObject();
     }
+
     @Bean
     IntegrationFlow outboundYearReportIntegrationFlow(AmqpTemplate amqpTemplate) {
         return IntegrationFlow //
@@ -84,11 +100,40 @@ class MasterRemoteChunkConfig {
     QueueChannel masterYearReportReplieMessageChannel() {
         return MessageChannels.queue().getObject();
     }
+
     @Bean
     IntegrationFlow inboundYearReportIntegrationFlow(ConnectionFactory connectionFactory) {
         return IntegrationFlow//
                 .from(Amqp.inboundAdapter(connectionFactory, Properties.getRabbitmqQueueFour()))//replies
                 .channel(masterYearReportReplieMessageChannel())//
+                .get();
+    }
+
+    @Bean // Configure outbound flow (requests going to workers)
+    @Qualifier("masterOutboundGameByYear")
+    DirectChannel masterOutboundGameByYear() {
+        return MessageChannels.direct().getObject();
+    }
+
+    @Bean
+    IntegrationFlow outboundGameByYearIntegrationFlow(AmqpTemplate amqpTemplate) {
+        return IntegrationFlow //
+                .from(masterOutboundGameByYear())//
+                .handle(Amqp.outboundAdapter(amqpTemplate).routingKey(Properties.getRabbitmqQueueFive()))//requests
+                .get();
+    }
+
+    @Bean // Configure inbound flow (replies coming from workers)
+    @Qualifier("masterInboundGameByYear")
+    QueueChannel masterInboundGameByYear() {
+        return MessageChannels.queue().getObject();
+    }
+
+    @Bean
+    IntegrationFlow inboundGameByYearIntegrationFlow(ConnectionFactory connectionFactory) {
+        return IntegrationFlow//
+                .from(Amqp.inboundAdapter(connectionFactory, Properties.getRabbitmqQueueSix()))//replies
+                .channel(masterInboundGameByYear())//
                 .get();
     }
 

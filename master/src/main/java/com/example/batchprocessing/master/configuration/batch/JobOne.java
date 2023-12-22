@@ -63,6 +63,7 @@ public class JobOne {
             @Qualifier("yearPlatformReportStep") Step yearPlatformReportStep,
             @Qualifier("yearReportStep") TaskletStep yearReportStep,
             @Qualifier("managerStep") TaskletStep managerStep,
+            @Qualifier("managerRemotePartitionerStep") Step step,
             @Qualifier("endStep") Step endStep
     ) {
         return new JobBuilder("jobSampleOne", jobRepository)
@@ -72,6 +73,7 @@ public class JobOne {
                 .from(gameByYearStep).on("*").to(yearPlatformReportStep)
                 .next(managerStep)// remoteChunk
                 .next(yearReportStep)// remoteChunk
+                .next(step)// remotePartitioningChunk
                 .next(endStep)
                 .build()
                 .build();
@@ -275,13 +277,13 @@ public class JobOne {
     @Bean // remoteChunk
     @Qualifier("managerStep")
     public TaskletStep managerStep(
-            RemoteChunkingManagerStepBuilderFactory managerStepBuilderFactory,
+            RemoteChunkingManagerStepBuilderFactory remoteChunkingManagerStepBuilderFactory,
             @Qualifier("managerItemReader") ListItemReader<Customer> managerItemReader,
             @Qualifier("managerItemProcessor") ItemProcessor<Object, Object> managerItemProcessor,
             @Qualifier("masterOutboundCustomerRequest") DirectChannel outbound,
             @Qualifier("masterInboundCustomerReply") QueueChannel inbound
     ) {
-        return managerStepBuilderFactory.get("managerStep")
+        return remoteChunkingManagerStepBuilderFactory.get("managerStep")
                 .<Customer, String>chunk(2)
                 .reader(managerItemReader)
                 .processor(managerItemProcessor)
@@ -351,7 +353,7 @@ public class JobOne {
     @Bean // remoteChunk
     @Qualifier("yearReportStep")
     public TaskletStep yearReportStep(
-            RemoteChunkingManagerStepBuilderFactory managerStepBuilderFactory,
+            RemoteChunkingManagerStepBuilderFactory remoteChunkingManagerStepBuilderFactory,
             @Qualifier("yearPlatformSalesItemReader") ItemReader<YearReport> itemReader,
             @Qualifier("masterOutboundYearReport") DirectChannel outbound,
             @Qualifier("masterInboundYearReport") QueueChannel inbound,
@@ -360,7 +362,7 @@ public class JobOne {
             ObjectMapper objectMapper
     ) {
 
-        return managerStepBuilderFactory.get("yearReportStep")
+        return remoteChunkingManagerStepBuilderFactory.get("yearReportStep")
                 .<YearReport, String>chunk(100)
                 .reader(itemReader)
                 .processor((yearReport) -> {

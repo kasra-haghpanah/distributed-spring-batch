@@ -58,13 +58,20 @@ public class JobLauncherApp {
     @Qualifier("runner")
     ApplicationRunner runner(
             @Qualifier("jobSampleOne") Job jobSampleOne,
-            @Qualifier("jobLauncherTwo") JobLauncher jobLauncherTwo
+            //@Qualifier("jobSampleTwo") Job jobSampleTwo,
+            JobLauncher jobLauncher
+            //,@Qualifier("jobLauncherTwo") JobLauncher jobLauncherTwo
     ) {
         return (applicationArguments) -> {
 
-            JobExecution run = jobLauncherTwo.run(jobSampleOne, new JobParametersBuilder().addString("uuid", UUID.randomUUID().toString()).addDate("date", new Date()).toJobParameters());
-            JobInstance jobInstance = run.getJobInstance();
-            System.out.println("instanceId: " + jobInstance.getInstanceId());
+            JobExecution run1 = jobLauncher.run(jobSampleOne, new JobParametersBuilder().addString("uuid", UUID.randomUUID().toString()).addDate("date", new Date()).toJobParameters());
+            JobInstance jobInstance1 = run1.getJobInstance();
+            System.out.println("instanceId1: " + jobInstance1.getInstanceId());
+
+//            JobExecution run2 = jobLauncher.run(jobSampleTwo, new JobParametersBuilder().toJobParameters());
+//            JobInstance jobInstance2 = run2.getJobInstance();
+//            System.out.println("instanceId2: " + jobInstance2.getInstanceId());
+
         };
 
     }

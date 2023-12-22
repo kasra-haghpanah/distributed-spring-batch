@@ -61,6 +61,17 @@ public class RabbitConfiguration {
     Queue yearReportReplieQueue() {
         return new Queue(Properties.getRabbitmqQueueFour(), false);
     }
+
+    @Bean
+    @Qualifier("gameByYearRequestQueue")
+    Queue gameByYearRequestQueue() {
+        return new Queue(Properties.getRabbitmqQueueFive(), false);
+    }
+    @Bean
+    @Qualifier("gameByYearReplieQueue")
+    Queue gameByYearReplieQueue() {
+        return new Queue(Properties.getRabbitmqQueueSix(), false);
+    }
     @Bean
     Binding customerRequestBinding(TopicExchange exchange) {
         return BindingBuilder.bind(customerRequestQueue()).to(exchange).with(Properties.getRabbitmqQueueOne());
@@ -77,6 +88,15 @@ public class RabbitConfiguration {
     @Bean
     Binding yearReportReplieBinding(TopicExchange exchange) {
         return BindingBuilder.bind(yearReportReplieQueue()).to(exchange).with(Properties.getRabbitmqQueueFour());
+    }
+
+    @Bean
+    Binding gameByYearRequestBinding(TopicExchange exchange) {
+        return BindingBuilder.bind(yearReportRequestQueue()).to(exchange).with(Properties.getRabbitmqQueueFive());
+    }
+    @Bean
+    Binding gameByYearReplieBinding(TopicExchange exchange) {
+        return BindingBuilder.bind(yearReportReplieQueue()).to(exchange).with(Properties.getRabbitmqQueueSix());
     }
 
 /*    @Bean
