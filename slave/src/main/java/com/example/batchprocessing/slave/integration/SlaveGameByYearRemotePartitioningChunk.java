@@ -1,8 +1,6 @@
 package com.example.batchprocessing.slave.integration;
 
 import com.example.batchprocessing.slave.structure.GameByYear;
-import com.example.batchprocessing.slave.structure.YearPlatformSales;
-import com.example.batchprocessing.slave.structure.YearReport;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.integration.partition.RemotePartitioningWorkerStepBuilderFactory;
@@ -23,7 +21,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
