@@ -130,6 +130,9 @@ public class SlaveGameByYearRemotePartitioningChunk {
                 .reader(itemReader)
                 .processor(itemProcessor)
                 .writer(itemWriter)
+                .faultTolerant()
+                .retry(Exception.class)
+                .retryLimit(3)
                 .build();
     }
 

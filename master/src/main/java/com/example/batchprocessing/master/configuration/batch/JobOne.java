@@ -182,6 +182,9 @@ public class JobOne {
                 .<CsvRow, CsvRow>chunk(100, transactionManager)
                 .reader(gameByYearReader)
                 .writer(gameByYearWriter)
+                .faultTolerant()
+                .skip(IllegalArgumentException.class)
+                .skipLimit(3)
                 .listener(new StepExecutionListener() {
                     @Override
                     public void beforeStep(StepExecution stepExecution) {
