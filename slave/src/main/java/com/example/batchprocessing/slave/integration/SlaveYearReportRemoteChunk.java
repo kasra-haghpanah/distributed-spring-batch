@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.retry.annotation.Retryable;
 
 import javax.sql.DataSource;
 import java.util.HashMap;
@@ -41,6 +42,7 @@ public class SlaveYearReportRemoteChunk {
 
     @Bean
     @Qualifier("yearReportItemWriter")
+    @Retryable
     JdbcBatchItemWriter<YearReport> yearReportItemWriter(@Qualifier("dataSourceTwo") DataSource dataSource) {
         // for upsert
         String sql = """

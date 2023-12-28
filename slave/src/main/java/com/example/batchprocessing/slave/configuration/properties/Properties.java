@@ -14,6 +14,10 @@ public class Properties {
     private static final Map<String, Object> config = new HashMap<String, Object>();
 
     public Properties(Environment environment) {
+
+        config.put("retry.max-attempts", environment.getProperty("retry.max-attempts"));
+        config.put("retry.fixed-backoff", environment.getProperty("retry.fixed-backoff"));
+
         config.put("datasource1.url", environment.getProperty("datasource1.url"));
         config.put("datasource1.driver-class-name", environment.getProperty("datasource1.driver-class-name"));
         config.put("datasource1.username", environment.getProperty("datasource1.username"));
@@ -48,6 +52,14 @@ public class Properties {
         return (T) config.get(key);
     }
 
+    public static Integer getRetryMaxAttempts() {
+        return JavaUtil.getInteger(get("retry.max-attempts", String.class), 100);
+    }
+
+    public static Integer getRetryFixedBackoff() {
+        return JavaUtil.getInteger(get("retry.fixed-backoff", String.class), 10);
+    }
+
     public static String getDatasourceOneUrl() {
         return get("datasource1.url", String.class);
     }
@@ -68,6 +80,10 @@ public class Properties {
         return JavaUtil.getInteger(get("datasource1.maximum.pool.size", String.class), 1);
     }
 
+    public static Long getDatasourceOneMaximumLifeTime() {
+        return JavaUtil.getLong(get("datasource1.maximum.lifetime", String.class), 30l);
+    }
+
     public static String getDatasourceTwoUrl() {
         return get("datasource2.url", String.class);
     }
@@ -86,6 +102,10 @@ public class Properties {
 
     public static Integer getDatasourceTwoMaximumPoolSize() {
         return JavaUtil.getInteger(get("datasource2.maximum.pool.size", String.class), 1);
+    }
+
+    public static Long getDatasourceTwoMaximumLifeTime() {
+        return JavaUtil.getLong(get("datasource2.maximum.lifetime", String.class), 30l);
     }
 
     public static String getRabbitmqHost() {

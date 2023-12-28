@@ -35,6 +35,7 @@ import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.channel.QueueChannel;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -120,6 +121,7 @@ public class JobOne {
 
     @Bean
     @Qualifier("gameByYearWriter")
+    @Retryable
     JdbcBatchItemWriter<CsvRow> gameByYearWriter(@Qualifier("dataSourceTwo") DataSource dataSource) {
         // for upsert
         String sql = """

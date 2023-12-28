@@ -10,6 +10,7 @@ import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.JdbcTransactionManager;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -23,6 +24,7 @@ public class JDBConfig {
     @Primary
     @Bean
     @Qualifier("dataSourceOne")
+    @Retryable
     public DataSource dataSourceOne() {
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(Properties.getDatasourceOneUrl());
@@ -30,6 +32,7 @@ public class JDBConfig {
         config.setUsername(Properties.getDatasourceOneUsername());
         config.setPassword(Properties.getDatasourceOnePassword());
         config.setMaximumPoolSize(Properties.getDatasourceOneMaximumPoolSize());
+        config.setMaxLifetime(Properties.getDatasourceOneMaximumLifeTime());
         return new HikariDataSource(config);
     }
 
@@ -55,6 +58,7 @@ public class JDBConfig {
 
     @Bean
     @Qualifier("dataSourceTwo")
+    @Retryable
     public DataSource dataSourceTwo() {
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(Properties.getDatasourceTwoUrl());
@@ -62,6 +66,7 @@ public class JDBConfig {
         config.setUsername(Properties.getDatasourceTwoUsername());
         config.setPassword(Properties.getDatasourceTwoPassword());
         config.setMaximumPoolSize(Properties.getDatasourceTwoMaximumPoolSize());
+        config.setMaxLifetime(Properties.getDatasourceTwoMaximumLifeTime());
         return new HikariDataSource(config);
     }
 

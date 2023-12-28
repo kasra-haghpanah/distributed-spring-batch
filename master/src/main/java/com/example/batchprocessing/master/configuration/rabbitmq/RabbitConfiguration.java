@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Primary;
+import org.springframework.retry.annotation.Retryable;
 
 /**
  * installs all the infrastructure for RabbitMQ
@@ -22,6 +23,7 @@ import org.springframework.context.annotation.Primary;
 public class RabbitConfiguration {
 
     @Bean
+    @Retryable
     public ConnectionFactory connectionFactory() {
         CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
         connectionFactory.setAddresses(Properties.getRabbitmqHost());

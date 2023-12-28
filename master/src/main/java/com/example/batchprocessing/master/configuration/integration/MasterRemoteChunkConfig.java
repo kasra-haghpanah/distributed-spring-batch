@@ -22,6 +22,7 @@ import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.channel.QueueChannel;
 import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.MessageChannels;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import java.util.Set;
@@ -55,11 +56,13 @@ class MasterRemoteChunkConfig {
 
     @Bean // Configure outbound flow (requests going to workers)
     @Qualifier("masterOutboundCustomerRequest")
+    //@Retryable
     DirectChannel masterCustomerRequestMessageChannel() {
         return MessageChannels.direct().getObject();
     }
 
     @Bean
+    //@Retryable
     IntegrationFlow outboundCustomerIntegrationFlow(AmqpTemplate amqpTemplate) {
         return IntegrationFlow //
                 .from(masterCustomerRequestMessageChannel())//
@@ -69,11 +72,13 @@ class MasterRemoteChunkConfig {
 
     @Bean // Configure inbound flow (replies coming from workers)
     @Qualifier("masterInboundCustomerReply")
+    //@Retryable
     QueueChannel masterCustomerReplieMessageChannel() {
         return MessageChannels.queue().getObject();
     }
 
     @Bean
+    //@Retryable
     IntegrationFlow inboundCustomerIntegrationFlow(ConnectionFactory connectionFactory) {
         return IntegrationFlow//
                 .from(Amqp.inboundAdapter(connectionFactory, Properties.getRabbitmqQueueTwo()))//replies
@@ -83,11 +88,13 @@ class MasterRemoteChunkConfig {
 
     @Bean // Configure outbound flow (requests going to workers)
     @Qualifier("masterOutboundYearReport")
+    //@Retryable
     DirectChannel masterYearReportRequestMessageChannel() {
         return MessageChannels.direct().getObject();
     }
 
     @Bean
+    //@Retryable
     IntegrationFlow outboundYearReportIntegrationFlow(AmqpTemplate amqpTemplate) {
         return IntegrationFlow //
                 .from(masterYearReportRequestMessageChannel())//
@@ -97,11 +104,13 @@ class MasterRemoteChunkConfig {
 
     @Bean // Configure inbound flow (replies coming from workers)
     @Qualifier("masterInboundYearReport")
+    //@Retryable
     QueueChannel masterYearReportReplieMessageChannel() {
         return MessageChannels.queue().getObject();
     }
 
     @Bean
+    //@Retryable
     IntegrationFlow inboundYearReportIntegrationFlow(ConnectionFactory connectionFactory) {
         return IntegrationFlow//
                 .from(Amqp.inboundAdapter(connectionFactory, Properties.getRabbitmqQueueFour()))//replies
@@ -111,11 +120,13 @@ class MasterRemoteChunkConfig {
 
     @Bean // Configure outbound flow (requests going to workers)
     @Qualifier("masterOutboundGameByYear")
+    //@Retryable
     DirectChannel masterOutboundGameByYear() {
         return MessageChannels.direct().getObject();
     }
 
     @Bean
+    //@Retryable
     IntegrationFlow outboundGameByYearIntegrationFlow(AmqpTemplate amqpTemplate) {
         return IntegrationFlow //
                 .from(masterOutboundGameByYear())//
@@ -125,6 +136,7 @@ class MasterRemoteChunkConfig {
 
     @Bean // Configure inbound flow (replies coming from workers)
     @Qualifier("masterInboundGameByYear")
+    //@Retryable
     QueueChannel masterInboundGameByYear() {
         return MessageChannels.queue().getObject();
     }

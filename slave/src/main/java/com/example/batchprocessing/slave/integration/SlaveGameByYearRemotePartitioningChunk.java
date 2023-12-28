@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
@@ -74,6 +75,7 @@ public class SlaveGameByYearRemotePartitioningChunk {
 
     @Bean
     @Qualifier("gameByYearItemWriter")
+    @Retryable
     JdbcBatchItemWriter<GameByYear> gameByYearItemWriter(@Qualifier("dataSourceTwo") DataSource dataSource) {
         // for upsert
         String sql = """
