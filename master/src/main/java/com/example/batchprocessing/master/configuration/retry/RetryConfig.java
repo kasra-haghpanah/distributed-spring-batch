@@ -62,6 +62,7 @@ public class RetryConfig {
 
             // With annotations
             System.out.println("tttttttttttttt");
+
 //            registry.destroySingleton("dataSourceOne");
 //            registry.registerSingleton("dataSourceOne", createDataSource());
 
