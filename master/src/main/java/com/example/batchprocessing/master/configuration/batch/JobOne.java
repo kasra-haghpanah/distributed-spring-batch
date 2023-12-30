@@ -76,7 +76,7 @@ public class JobOne {
                 .next(yearReportStep)// remoteChunk
                 .next(step)// remotePartitioningChunk
                 .next(endStep)
-                .build()
+                .end()
                 .build();
     }
 
@@ -111,12 +111,25 @@ public class JobOne {
         return new FlatFileItemReaderBuilder<CsvRow>()
                 .resource(resource)
                 .name("gameByYearReader")
-                .delimited().delimiter(",")//
+                .delimited().delimiter(",")
                 .names("rank,name,platform,year,genre,publisher,na,eu,jp,other,global".split(","))
                 .linesToSkip(1)
                 .fieldSetMapper(fieldSet -> { // FieldSet<CsvRow>
-                    return new CsvRow(fieldSet.readInt("rank"), fieldSet.readString("name"), fieldSet.readString("platform"), JavaUtil.getInteger(fieldSet.readString("year"), 0), fieldSet.readString("genre"), fieldSet.readString("publisher"), fieldSet.readFloat("na"), fieldSet.readFloat("eu"), fieldSet.readFloat("jp"), fieldSet.readFloat("other"), fieldSet.readFloat("global"));
-                }).build();
+                    return new CsvRow(
+                            fieldSet.readInt("rank"),
+                            fieldSet.readString("name"),
+                            fieldSet.readString("platform"),
+                            JavaUtil.getInteger(fieldSet.readString("year"), 0),
+                            fieldSet.readString("genre"),
+                            fieldSet.readString("publisher"),
+                            fieldSet.readFloat("na"),
+                            fieldSet.readFloat("eu"),
+                            fieldSet.readFloat("jp"),
+                            fieldSet.readFloat("other"),
+                            fieldSet.readFloat("global")
+                    );
+                })
+                .build();
     }
 
     @Bean

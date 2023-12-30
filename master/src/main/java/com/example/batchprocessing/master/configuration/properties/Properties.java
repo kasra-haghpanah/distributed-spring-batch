@@ -14,6 +14,7 @@ public class Properties {
 
     public Properties(Environment environment) {
 
+        config.put("batch.job-launcher.schedule-with-fixed-delay", environment.getProperty("batch.job-launcher.schedule-with-fixed-delay"));
         config.put("retry.max-attempts", environment.getProperty("retry.max-attempts"));
         config.put("retry.fixed-backoff", environment.getProperty("retry.fixed-backoff"));
 
@@ -55,6 +56,9 @@ public class Properties {
     }
 
 
+    public static Long getBatchJobLauncherScheduleWithFixedDelay() {
+        return JavaUtil.getLong(get("batch.job-launcher.schedule-with-fixed-delay", String.class), 60l);
+    }
     public static Integer getRetryMaxAttempts() {
         return JavaUtil.getInteger(get("retry.max-attempts", String.class), 100);
     }
