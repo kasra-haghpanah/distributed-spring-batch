@@ -37,8 +37,8 @@ public class JobTwo {
 
     }
 
-    //@Bean
-    //@Qualifier("jobSampleTwo")
+    @Bean
+    @Qualifier("jobSampleTwo")
     public Job jobSampleTwo(
             JobRepository jobRepository,
             @Qualifier("managerRemotePartitionerStep") Step step

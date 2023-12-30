@@ -74,7 +74,7 @@ public class JobOne {
                 .from(gameByYearStep).on("*").to(yearPlatformReportStep)
                 .next(managerStep)// remoteChunk
                 .next(yearReportStep)// remoteChunk
-                .next(step)// remotePartitioningChunk
+                //.next(step)// remotePartitioningChunk
                 .next(endStep)
                 .end()
                 .build();
