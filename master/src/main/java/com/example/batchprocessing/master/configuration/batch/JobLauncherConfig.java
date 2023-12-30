@@ -12,12 +12,8 @@ public class JobLauncherConfig {
 
     @Bean
     @Qualifier("taskExecutorJobLauncher")
-    public JobLauncher taskExecutorJobLauncher(
-            JobRepository jobRepository//,
-            //@Qualifier("taskExecutor") ThreadPoolTaskExecutor taskExecutor
-    ) {
+    public JobLauncher taskExecutorJobLauncher(JobRepository jobRepository) {
         TaskExecutorJobLauncher jobLauncher = new TaskExecutorJobLauncher();
-        //jobLauncher.setTaskExecutor(taskExecutor);
         jobLauncher.setJobRepository(jobRepository);
         return jobLauncher;
     }
