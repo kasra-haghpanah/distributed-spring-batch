@@ -4,6 +4,7 @@ import com.example.batchprocessing.slave.configuration.properties.Properties;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.batch.BatchDataSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
@@ -15,6 +16,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.sql.DataSource;
+import java.net.SocketException;
 
 @DependsOn({"properties"})
 @Configuration
@@ -24,7 +26,8 @@ public class JDBConfig {
     @Primary
     @Bean
     @Qualifier("dataSourceOne")
-    @Retryable
+    @BatchDataSource
+    @Retryable({SocketException.class})
     public DataSource dataSourceOne() {
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(Properties.getDatasourceOneUrl());
@@ -58,7 +61,7 @@ public class JDBConfig {
 
     @Bean
     @Qualifier("dataSourceTwo")
-    @Retryable
+    @Retryable({SocketException.class})
     public DataSource dataSourceTwo() {
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(Properties.getDatasourceTwoUrl());
