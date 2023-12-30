@@ -90,12 +90,13 @@ public class SchedulerConfig {
                 JobExecution run1 = null;
                 try {
                     run1 = jobLauncher.run(jobSampleOne, new JobParametersBuilder().addString("uuid", UUID.randomUUID().toString()).addDate("date", new Date()).toJobParameters());
+                    JobInstance jobInstance1 = run1.getJobInstance();
+                    System.out.println("instanceId1: " + jobInstance1.getInstanceId());
                 } catch (JobExecutionAlreadyRunningException | JobRestartException |
                          JobInstanceAlreadyCompleteException | JobParametersInvalidException e) {
                     throw new RuntimeException(e);
                 }
-                JobInstance jobInstance1 = run1.getJobInstance();
-                System.out.println("instanceId1: " + jobInstance1.getInstanceId());
+
             }
         };
         taskScheduler.scheduleWithFixedDelay(task, Duration.ofSeconds(Properties.getBatchJobLauncherScheduleWithFixedDelay()));
