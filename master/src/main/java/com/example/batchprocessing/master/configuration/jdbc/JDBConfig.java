@@ -16,7 +16,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.sql.DataSource;
-import java.net.SocketException;
+import java.net.ConnectException;
 
 @DependsOn({"properties"})
 @Configuration
@@ -27,7 +27,7 @@ public class JDBConfig {
     @Bean
     @Qualifier("dataSourceOne")
     @BatchDataSource
-    @Retryable({SocketException.class})
+    @Retryable({ConnectException.class})
     public DataSource dataSourceOne() {
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(Properties.getDatasourceOneUrl());
@@ -52,16 +52,17 @@ public class JDBConfig {
     public PlatformTransactionManager batchTM() {
         return new JdbcTransactionManager(dataSourceOne());
     }
+
     @Primary
     @Bean
     @Qualifier("batchTT")
-    public TransactionTemplate batchTT(){
+    public TransactionTemplate batchTT() {
         return new TransactionTemplate(batchTM());
     }
 
     @Bean
     @Qualifier("dataSourceTwo")
-    @Retryable({SocketException.class})
+    @Retryable({ConnectException.class})
     public DataSource dataSourceTwo() {
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(Properties.getDatasourceTwoUrl());
@@ -84,9 +85,10 @@ public class JDBConfig {
     public PlatformTransactionManager batchDestinationTM() {
         return new JdbcTransactionManager(dataSourceTwo());
     }
+
     @Bean
     @Qualifier("batchDestinationTT")
-    public TransactionTemplate batchDestinationTT(){
+    public TransactionTemplate batchDestinationTT() {
         return new TransactionTemplate(batchDestinationTM());
     }
 

@@ -60,15 +60,43 @@ public class SchedulerConfig {
     @Bean
     public String scheduleJobOne(
             @Qualifier("taskScheduler") TaskScheduler taskScheduler,
-            @Qualifier("jobSampleOne") Job jobSampleOne,
             @Qualifier("taskExecutorJobLauncher") JobLauncher taskExecutorJobLauncher,
-            JobOperator jobOperator
+            JobOperator jobOperator,
+            @Qualifier("jobSampleOne") Job jobSampleOne
+    ) {
+
+        Runnable task = () -> {
+            runJobLauncher(taskExecutorJobLauncher, jobOperator, jobSampleOne);
+        };
+        taskScheduler.scheduleWithFixedDelay(task, Duration.ofSeconds(Properties.getBatchJobLauncherScheduleWithFixedDelay()));
+        return null;
+    }
+
+
+    @Bean
+    public String scheduleJobTwo(
+            @Qualifier("taskScheduler") TaskScheduler taskScheduler,
+            @Qualifier("taskExecutorJobLauncher") JobLauncher taskExecutorJobLauncher,
+            JobOperator jobOperator,
+            @Qualifier("jobSampleTwo") Job jobSampleTwo
+
     ) {
 
 
         Runnable task = () -> {
-            Set<Long> executions = null;
-            try {
+            runJobLauncher(taskExecutorJobLauncher, jobOperator, jobSampleTwo);
+        };
+        taskScheduler.scheduleWithFixedDelay(task, Duration.ofSeconds(Properties.getBatchJobLauncherScheduleWithFixedDelay()));
+        return null;
+    }
+
+    public static void runJobLauncher(
+            JobLauncher jobLauncher,
+            JobOperator jobOperator,
+            Job job
+    ) {
+        Set<Long> executions = null;
+        try {
 /*
                 registry.destroySingleton("dataSourceOne");
                 registry.registerSingleton("dataSourceOne", createDataSource());
@@ -80,59 +108,22 @@ public class SchedulerConfig {
                 jobOperator.stop(executions.iterator().next());
                 jobOperator.abandon(executions.iterator().next());
                 */
-                executions = jobOperator.getRunningExecutions(jobSampleOne.getName());
-            } catch (NoSuchJobException e) {
-                throw new RuntimeException(e);
-            }
-            if (executions.size() == 0) {
-                JobExecution run1 = null;
-                try {
-                    run1 = taskExecutorJobLauncher.run(jobSampleOne, new JobParametersBuilder().addString("uuid", UUID.randomUUID().toString()).addDate("date", new Date()).toJobParameters());
-                    JobInstance jobInstance1 = run1.getJobInstance();
-                    System.out.println("instanceId1: " + jobInstance1.getInstanceId());
-                } catch (JobExecutionAlreadyRunningException | JobRestartException |
-                         JobInstanceAlreadyCompleteException | JobParametersInvalidException e) {
-                    throw new RuntimeException(e);
-                }
-
-            }
-        };
-        taskScheduler.scheduleWithFixedDelay(task, Duration.ofSeconds(Properties.getBatchJobLauncherScheduleWithFixedDelay()));
-        return null;
-    }
-
-
-    @Bean
-    public String scheduleJobTwo(
-            @Qualifier("taskScheduler") TaskScheduler taskScheduler,
-            @Qualifier("jobSampleTwo") Job jobSampleTwo,
-            @Qualifier("taskExecutorJobLauncher") JobLauncher taskExecutorJobLauncher,
-            JobOperator jobOperator
-    ) {
-
-
-        Runnable task = () -> {
-            Set<Long> executions = null;
+            executions = jobOperator.getRunningExecutions(job.getName());
+        } catch (NoSuchJobException e) {
+            throw new RuntimeException(e);
+        }
+        if (executions.size() == 0) {
+            JobExecution run = null;
             try {
-                executions = jobOperator.getRunningExecutions(jobSampleTwo.getName());
-            } catch (NoSuchJobException e) {
+                run = jobLauncher.run(job, new JobParametersBuilder().addString("uuid", UUID.randomUUID().toString()).addDate("date", new Date()).toJobParameters());
+                JobInstance jobInstance = run.getJobInstance();
+                System.out.println(MessageFormat.format("jobName: {0} , instanceId: {1}", jobInstance.getJobName(), jobInstance.getInstanceId()));
+            } catch (JobExecutionAlreadyRunningException | JobRestartException |
+                     JobInstanceAlreadyCompleteException | JobParametersInvalidException e) {
                 throw new RuntimeException(e);
             }
-            if (executions.size() == 0) {
-                JobExecution run2 = null;
-                try {
-                    run2 = taskExecutorJobLauncher.run(jobSampleTwo, new JobParametersBuilder().addString("uuid", UUID.randomUUID().toString()).addDate("date", new Date()).toJobParameters());
-                    JobInstance jobInstance1 = run2.getJobInstance();
-                    System.out.println("instanceId2: " + jobInstance1.getInstanceId());
-                } catch (JobExecutionAlreadyRunningException | JobRestartException |
-                         JobInstanceAlreadyCompleteException | JobParametersInvalidException e) {
-                    throw new RuntimeException(e);
-                }
 
-            }
-        };
-        taskScheduler.scheduleWithFixedDelay(task, Duration.ofSeconds(Properties.getBatchJobLauncherScheduleWithFixedDelay()));
-        return null;
+        }
     }
 
 

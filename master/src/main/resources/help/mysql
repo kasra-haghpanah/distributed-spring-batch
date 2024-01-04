@@ -1,3 +1,6 @@
+https://softwarekeep.com/help-center/how-to-solve-error-mysql-shutdown-unexpectedly
+
+
 ALTER USER 'root'@'localhost' IDENTIFIED VIA mysql_native_password USING PASSWORD('123');
 
 

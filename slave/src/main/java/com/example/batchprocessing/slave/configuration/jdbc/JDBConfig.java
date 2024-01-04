@@ -16,7 +16,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.sql.DataSource;
-import java.net.SocketException;
+import java.net.ConnectException;
 
 @DependsOn({"properties"})
 @Configuration
@@ -27,7 +27,7 @@ public class JDBConfig {
     @Bean
     @Qualifier("dataSourceOne")
     @BatchDataSource
-    @Retryable({SocketException.class})
+    @Retryable({ConnectException.class})
     public DataSource dataSourceOne() {
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(Properties.getDatasourceOneUrl());
@@ -61,7 +61,7 @@ public class JDBConfig {
 
     @Bean
     @Qualifier("dataSourceTwo")
-    @Retryable({SocketException.class})
+    @Retryable({ConnectException.class})
     public DataSource dataSourceTwo() {
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(Properties.getDatasourceTwoUrl());

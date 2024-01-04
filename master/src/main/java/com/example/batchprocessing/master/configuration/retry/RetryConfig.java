@@ -3,6 +3,7 @@ package com.example.batchprocessing.master.configuration.retry;
 import com.example.batchprocessing.master.configuration.properties.Properties;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.launch.JobOperator;
+import org.springframework.batch.core.launch.NoSuchJobException;
 import org.springframework.batch.core.launch.NoSuchJobExecutionException;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -67,83 +68,12 @@ public class RetryConfig {
             System.out.println("RetryTemplate is running.");
             // RetryTemplate
             retryTemplate.execute(context -> {
+
                 Throwable throwable = context.getLastThrowable();
-
-/*                Set<Long> executions = jobOperator.getRunningExecutions(jobSampleOne.getName());//SchedulerConfig.getJobInstanceId("jobSampleOne");
-                for (Long instanceId : executions) {
-                    List<Long> longs = jobOperator.getExecutions(instanceId);
-
-                    try {
-                        Map<Long, String> map = jobOperator.getStepExecutionSummaries(executions.iterator().next());
-                        for (Long key : map.keySet()) {
-                            String value = map.get(key);
-
-                            if (value.indexOf("status=COMPLETED") < 0) {
-
-                                int indexName = value.indexOf("name=");
-                                String name = value.substring(indexName, value.indexOf(",", indexName));
-                                name = name.substring(name.indexOf("=") + 1);
-
-                                List<JobInstance> jobInstances = jobRepository.findJobInstancesByName(jobSampleOne.getName(), 0, 1);
-                                List<JobExecution> jobExecutions = jobRepository.findJobExecutions(jobInstances.get(0));
-                                JobExecution jobExecution = jobExecutions.get(0);
-                                StepExecution stepExecution = jobRepository.getLastStepExecution(jobInstances.get(0), name);
-                                stepExecution.setExitStatus(ExitStatus.EXECUTING);
-                                //stepExecution.setEndTime(LocalDateTime.now());
-                                jobRepository.update(stepExecution);
-
-                                jobExecution.setStatus(BatchStatus.STARTED);
-                                //jobExecution.setEndTime(LocalDateTime.now());
-                                jobRepository.update(jobExecution);
-                                jobOperator.restart(jobExecution.getJobId());
-                            }
-                        }
-
-                        System.out.println(map);
-                    } catch (NoSuchJobExecutionException e) {
-                        throw new RuntimeException(e);
-                    }
-
-
-                    Set<Long> executions2 = jobOperator.getRunningExecutions(jobSampleTwo.getName());//SchedulerConfig.getJobInstanceId("jobSampleOne");
-                    for (Long instanceId2 : executions) {
-                        List<Long> longs2 = jobOperator.getExecutions(instanceId2);
-
-                        try {
-                            Map<Long, String> map = jobOperator.getStepExecutionSummaries(executions2.iterator().next());
-                            for (Long key : map.keySet()) {
-                                String value = map.get(key);
-
-                                if (value.indexOf("status=COMPLETED") < 0) {
-
-                                    int indexName = value.indexOf("name=");
-                                    String name = value.substring(indexName, value.indexOf(",", indexName));
-                                    name = name.substring(name.indexOf("=") + 1);
-
-                                    List<JobInstance> jobInstances = jobRepository.findJobInstancesByName(jobSampleTwo.getName(), 0, 1);
-                                    List<JobExecution> jobExecutions = jobRepository.findJobExecutions(jobInstances.get(0));
-                                    JobExecution jobExecution = jobExecutions.get(0);
-                                    StepExecution stepExecution = jobRepository.getLastStepExecution(jobInstances.get(0), name);
-                                    stepExecution.setExitStatus(ExitStatus.EXECUTING);
-                                    //stepExecution.setEndTime(LocalDateTime.now());
-                                    jobRepository.update(stepExecution);
-
-                                    jobExecution.setStatus(BatchStatus.STARTED);
-                                    //jobExecution.setEndTime(LocalDateTime.now());
-                                    jobRepository.update(jobExecution);
-                                    jobOperator.restart(jobExecution.getJobId());
-                                }
-                            }
-
-                            System.out.println(map);
-                        } catch (NoSuchJobExecutionException e) {
-                            throw new RuntimeException(e);
-                        }
-
-
-                    }
-
-                }*/
+                if (throwable != null) {
+                    resumeJob(context, jobOperator, jobRepository, jobSampleOne);
+                    resumeJob(context, jobOperator, jobRepository, jobSampleTwo);
+                }
 
                 return null;
             }, context -> {
@@ -152,6 +82,51 @@ public class RetryConfig {
             });
 
         };
+    }
+
+    public static void resumeJob(
+            RetryContext context,
+            JobOperator jobOperator,
+            JobRepository jobRepository,
+            Job job
+    ) throws Exception {
+
+        Throwable throwable = context.getLastThrowable();
+
+        Set<Long> executions = jobOperator.getRunningExecutions(job.getName());//SchedulerConfig.getJobInstanceId("jobSampleOne");
+        for (Long instanceId : executions) {
+            List<Long> longs = jobOperator.getExecutions(instanceId);
+
+
+            Map<Long, String> map = jobOperator.getStepExecutionSummaries(executions.iterator().next());
+            for (Long key : map.keySet()) {
+                String value = map.get(key);
+
+                if (value.indexOf("status=COMPLETED") < 0) {
+
+                    int indexName = value.indexOf("name=");
+                    String name = value.substring(indexName, value.indexOf(",", indexName));
+                    name = name.substring(name.indexOf("=") + 1);
+
+                    List<JobInstance> jobInstances = jobRepository.findJobInstancesByName(job.getName(), 0, 1);
+                    List<JobExecution> jobExecutions = jobRepository.findJobExecutions(jobInstances.get(0));
+                    JobExecution jobExecution = jobExecutions.get(0);
+                    StepExecution stepExecution = jobRepository.getLastStepExecution(jobInstances.get(0), name);
+                    stepExecution.setExitStatus(ExitStatus.FAILED);
+                    //stepExecution.setEndTime(LocalDateTime.now());
+                    jobRepository.update(stepExecution);
+
+                    jobExecution.setStatus(BatchStatus.STARTED);
+                    //jobExecution.setEndTime(LocalDateTime.now());
+                    jobRepository.update(jobExecution);
+                    jobOperator.restart(jobExecution.getJobId());
+                }
+            }
+
+            System.out.println(map);
+        }
+
+
     }
 
     @Recover
