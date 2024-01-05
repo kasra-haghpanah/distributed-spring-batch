@@ -66,7 +66,11 @@ public class SchedulerConfig {
     ) {
 
         Runnable task = () -> {
-            runJobLauncher(taskExecutorJobLauncher, jobOperator, jobSampleOne);
+            JobParameters jobParameters = new JobParametersBuilder()
+                    .addString("uuid", UUID.randomUUID().toString())
+                    .addDate("date", new Date())
+                    .toJobParameters();
+            runJobLauncher(taskExecutorJobLauncher, jobOperator, jobSampleOne, jobParameters);
         };
         taskScheduler.scheduleWithFixedDelay(task, Duration.ofSeconds(Properties.getBatchJobLauncherScheduleWithFixedDelay()));
         return null;
@@ -84,7 +88,13 @@ public class SchedulerConfig {
 
 
         Runnable task = () -> {
-            runJobLauncher(taskExecutorJobLauncher, jobOperator, jobSampleTwo);
+            JobParameters jobParameters = new JobParametersBuilder()
+                    .addString("uuid", UUID.randomUUID().toString())
+                    .addDate("date", new Date())
+                    .addString("inputFile", "classpath:data/email.json")
+                    .addString("outputFile", "classpath:data/email-out.json")
+                    .toJobParameters();
+            runJobLauncher(taskExecutorJobLauncher, jobOperator, jobSampleTwo, jobParameters);
         };
         taskScheduler.scheduleWithFixedDelay(task, Duration.ofSeconds(Properties.getBatchJobLauncherScheduleWithFixedDelay()));
         return null;
@@ -93,7 +103,8 @@ public class SchedulerConfig {
     public static void runJobLauncher(
             JobLauncher jobLauncher,
             JobOperator jobOperator,
-            Job job
+            Job job,
+            JobParameters jobParameters
     ) {
         Set<Long> executions = null;
         try {
@@ -115,12 +126,12 @@ public class SchedulerConfig {
         if (executions.size() == 0) {
             JobExecution run = null;
             try {
-                run = jobLauncher.run(job, new JobParametersBuilder().addString("uuid", UUID.randomUUID().toString()).addDate("date", new Date()).toJobParameters());
+                run = jobLauncher.run(job, jobParameters);
                 JobInstance jobInstance = run.getJobInstance();
                 System.out.println(MessageFormat.format("jobName: {0} , instanceId: {1}", jobInstance.getJobName(), jobInstance.getInstanceId()));
             } catch (JobExecutionAlreadyRunningException | JobRestartException |
                      JobInstanceAlreadyCompleteException | JobParametersInvalidException e) {
-                throw new RuntimeException(e);
+                System.out.println(e.getMessage());
             }
 
         }

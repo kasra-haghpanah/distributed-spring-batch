@@ -10,10 +10,13 @@ import java.util.Map;
 @Configuration("properties")
 public class Properties {
 
+    public static final String EMPTY_CSV_STATUS = "EMPTY";
     private static final Map<String, Object> config = new HashMap<String, Object>();
 
     public Properties(Environment environment) {
 
+
+        config.put("time.zone", environment.getProperty("time.zone"));
         config.put("batch.job-launcher.schedule-with-fixed-delay", environment.getProperty("batch.job-launcher.schedule-with-fixed-delay"));
         config.put("retry.max-attempts", environment.getProperty("retry.max-attempts"));
         config.put("retry.fixed-backoff", environment.getProperty("retry.fixed-backoff"));
@@ -45,6 +48,9 @@ public class Properties {
         config.put("rabbitmq.queue-four", environment.getProperty("rabbitmq.queue-four"));
         config.put("rabbitmq.queue-five", environment.getProperty("rabbitmq.queue-five"));
         config.put("rabbitmq.queue-six", environment.getProperty("rabbitmq.queue-six"));
+        config.put("rabbitmq.queue-seven", environment.getProperty("rabbitmq.queue-seven"));
+        config.put("rabbitmq.queue-eight", environment.getProperty("rabbitmq.queue-eight"));
+
     }
 
     private static Object get(String key) {
@@ -55,6 +61,9 @@ public class Properties {
         return (T) config.get(key);
     }
 
+    public static String getTimeZone() {
+        return get("time.zone", String.class);
+    }
 
     public static Long getBatchJobLauncherScheduleWithFixedDelay() {
         return JavaUtil.getLong(get("batch.job-launcher.schedule-with-fixed-delay", String.class), 60l);
@@ -158,5 +167,12 @@ public class Properties {
         return get("rabbitmq.queue-six", String.class);
     }
 
+    public static String getRabbitmqQueueSeven() {
+        return get("rabbitmq.queue-seven", String.class);
+    }
+
+    public static String getRabbitmqQueueEight() {
+        return get("rabbitmq.queue-eight", String.class);
+    }
 
 }

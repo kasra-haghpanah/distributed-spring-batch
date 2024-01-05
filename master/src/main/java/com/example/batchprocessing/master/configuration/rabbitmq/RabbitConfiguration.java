@@ -72,6 +72,19 @@ public class RabbitConfiguration {
     Queue gameByYearReplieQueue() {
         return new Queue(Properties.getRabbitmqQueueSix(), false);
     }
+
+    @Bean
+    @Qualifier("emailRequestQueue")
+    Queue emailRequestQueue() {
+        return new Queue(Properties.getRabbitmqQueueSeven(), false);
+    }
+    @Bean
+    @Qualifier("emailReplieQueue")
+    Queue emailReplieQueue() {
+        return new Queue(Properties.getRabbitmqQueueEight(), false);
+    }
+
+
     @Bean
     Binding customerRequestBinding(TopicExchange exchange) {
         return BindingBuilder.bind(customerRequestQueue()).to(exchange).with(Properties.getRabbitmqQueueOne());
@@ -97,6 +110,15 @@ public class RabbitConfiguration {
     @Bean
     Binding gameByYearReplieBinding(TopicExchange exchange) {
         return BindingBuilder.bind(yearReportReplieQueue()).to(exchange).with(Properties.getRabbitmqQueueSix());
+    }
+
+    @Bean
+    Binding emailRequestBinding(TopicExchange exchange) {
+        return BindingBuilder.bind(yearReportRequestQueue()).to(exchange).with(Properties.getRabbitmqQueueSeven());
+    }
+    @Bean
+    Binding emailReplieBinding(TopicExchange exchange) {
+        return BindingBuilder.bind(yearReportReplieQueue()).to(exchange).with(Properties.getRabbitmqQueueEight());
     }
 
 /*    @Bean

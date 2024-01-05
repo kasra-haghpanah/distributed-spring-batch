@@ -1,0 +1,38 @@
+[
+  {
+    "sender": "kasrakhpk1985@gmail.com",
+    "receiver": "kasra_khpk1985@yahoo.com",
+    "textMessage": "Hi every one!",
+    "date": "2024-01-01"
+  },
+  {
+    "sender": "kasrakhpk1985@gmail.com",
+    "receiver": "kasra_khpk1985@yahoo.com",
+    "textMessage": "How are you!",
+    "date": "2024-01-02"
+  },
+  {
+    "sender": "kasrakhpk1985@gmail.com",
+    "receiver": "kasra_khpk1985@yahoo.com",
+    "textMessage": "Is every thing working out?",
+    "date": "2024-01-02"
+  },
+  {
+    "sender": "kasrakhpk1985@gmail.com",
+    "receiver": "kasra_khpk1985@yahoo.com",
+    "textMessage": "very nice!",
+    "date": "2024-01-03"
+  },
+  {
+    "sender": "kasrakhpk1985@gmail.com",
+    "receiver": "kasra_khpk1985@yahoo.com",
+    "textMessage": "Are you interested in Spring Batch?",
+    "date": "2024-01-03"
+  },
+  {
+    "sender": "kasrakhpk1985@gmail.com",
+    "receiver": "kasra_khpk1985@yahoo.com",
+    "textMessage": "good bye!",
+    "date": "2024-01-04"
+  }
+]

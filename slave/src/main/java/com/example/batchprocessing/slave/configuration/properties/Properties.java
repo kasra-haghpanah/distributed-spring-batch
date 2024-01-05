@@ -42,6 +42,8 @@ public class Properties {
         config.put("rabbitmq.queue-four", environment.getProperty("rabbitmq.queue-four"));
         config.put("rabbitmq.queue-five", environment.getProperty("rabbitmq.queue-five"));
         config.put("rabbitmq.queue-six", environment.getProperty("rabbitmq.queue-six"));
+        config.put("rabbitmq.queue-seven", environment.getProperty("rabbitmq.queue-seven"));
+        config.put("rabbitmq.queue-eight", environment.getProperty("rabbitmq.queue-eight"));
     }
 
     private static Object get(String key) {
@@ -144,6 +146,12 @@ public class Properties {
     }
     public static String getRabbitmqQueueSix() {
         return get("rabbitmq.queue-six", String.class);
+    }
+    public static String getRabbitmqQueueSeven() {
+        return get("rabbitmq.queue-seven", String.class);
+    }
+    public static String getRabbitmqQueueEight() {
+        return get("rabbitmq.queue-eight", String.class);
     }
 
 

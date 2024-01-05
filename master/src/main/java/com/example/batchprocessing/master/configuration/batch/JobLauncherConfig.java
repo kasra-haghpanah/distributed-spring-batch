@@ -12,9 +12,10 @@ public class JobLauncherConfig {
 
     @Bean
     @Qualifier("taskExecutorJobLauncher")
-    public JobLauncher taskExecutorJobLauncher(JobRepository jobRepository) {
+    public JobLauncher taskExecutorJobLauncher(JobRepository jobRepository) throws Exception {
         TaskExecutorJobLauncher jobLauncher = new TaskExecutorJobLauncher();
         jobLauncher.setJobRepository(jobRepository);
+        jobLauncher.afterPropertiesSet();
         return jobLauncher;
     }
 

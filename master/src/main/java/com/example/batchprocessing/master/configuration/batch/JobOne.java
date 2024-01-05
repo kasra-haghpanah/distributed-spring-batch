@@ -1,6 +1,7 @@
 package com.example.batchprocessing.master.configuration.batch;
 
 import com.example.batchprocessing.master.configuration.listener.JobCompletedListener;
+import com.example.batchprocessing.master.configuration.properties.Properties;
 import com.example.batchprocessing.master.configuration.structure.CsvRow;
 import com.example.batchprocessing.master.configuration.structure.Customer;
 import com.example.batchprocessing.master.configuration.structure.YearPlatformSales;
@@ -52,8 +53,6 @@ import java.util.*;
 @Configuration
 public class JobOne {
 
-    public static final String EMPTY_CSV_STATUS = "EMPTY";
-
     @Bean
     @Qualifier("jobSampleOne")
     public Job jobSampleOne(
@@ -70,7 +69,7 @@ public class JobOne {
         return new JobBuilder("jobSampleOne", jobRepository)
                 .incrementer(new RunIdIncrementer())
                 .start(stepOne)
-                .next(gameByYearStep).on(EMPTY_CSV_STATUS).to(errorStep)
+                .next(gameByYearStep).on(Properties.EMPTY_CSV_STATUS).to(errorStep)
                 .from(gameByYearStep).on("*").to(yearPlatformReportStep)
                 .next(managerStep)// remoteChunk
                 .next(yearReportStep)// remoteChunk
@@ -209,7 +208,7 @@ public class JobOne {
                     @Override
                     public ExitStatus afterStep(StepExecution stepExecution) {
                         Integer count = Objects.requireNonNull(jdbcTemplate.queryForObject("SELECT coalesce(count(*) ,0) FROM video_game_sales", Integer.class));
-                        ExitStatus status = count == 0 ? new ExitStatus(EMPTY_CSV_STATUS) : ExitStatus.COMPLETED;
+                        ExitStatus status = count == 0 ? new ExitStatus(Properties.EMPTY_CSV_STATUS) : ExitStatus.COMPLETED;
                         System.out.println("the status is " + status);
                         return status;
                     }
@@ -398,7 +397,7 @@ public class JobOne {
                     @Override
                     public ExitStatus afterStep(StepExecution stepExecution) {
                         Integer count = Objects.requireNonNull(jdbcTemplate.queryForObject("SELECT coalesce(count(*) ,0) FROM remote_year_platform_report", Integer.class));
-                        ExitStatus status = count == 0 ? new ExitStatus(EMPTY_CSV_STATUS) : ExitStatus.COMPLETED;
+                        ExitStatus status = count == 0 ? new ExitStatus(Properties.EMPTY_CSV_STATUS) : ExitStatus.COMPLETED;
                         System.out.println("the status is " + status);
                         return status;
                     }

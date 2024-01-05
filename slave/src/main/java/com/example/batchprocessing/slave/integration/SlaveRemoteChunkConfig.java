@@ -115,4 +115,35 @@ public class SlaveRemoteChunkConfig {
                 .get();
     }
 
+
+
+
+    @Bean
+    @Qualifier("slaveInboundEmailRequest")
+    DirectChannel slaveInboundEmailRequest() {
+        return MessageChannels.direct().getObject();
+    }
+
+    @Bean
+    IntegrationFlow inboundAmqpEmailIntegrationFlow(ConnectionFactory connectionFactory) {
+        return IntegrationFlow//
+                .from(Amqp.inboundAdapter(connectionFactory, Properties.getRabbitmqQueueSeven()))//requests
+                .channel(slaveInboundEmailRequest())//
+                .get();
+    }
+
+    @Bean
+    @Qualifier("slaveOutboundEmailReply")
+    DirectChannel slaveOutboundEmailReply() {
+        return MessageChannels.direct().getObject();
+    }
+
+    @Bean
+    IntegrationFlow outboundAmqpEmailIntegrationFlow(AmqpTemplate template) {
+        return IntegrationFlow //
+                .from(slaveOutboundEmailReply())//
+                .handle(Amqp.outboundAdapter(template).routingKey(Properties.getRabbitmqQueueEight()))//replies
+                .get();
+    }
+
 }

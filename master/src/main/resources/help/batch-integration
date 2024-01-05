@@ -1,5 +1,10 @@
+https://docs.spring.io/spring-batch/reference/schema-appendix.html
+
 https://docs.spring.io/spring-batch/reference/job/advanced-meta-data.html
 
 https://docs.spring.io/spring-batch/reference/spring-batch-integration/sub-elements.html
 
 https://github.com/spring-projects/spring-batch/blob/main/spring-batch-samples/src/main/java/org/springframework/batch/samples/chunking/ManagerConfiguration.java
+
+
+https://github.com/spring-projects/spring-batch/blob/main/spring-batch-samples/src/main/java/org/springframework/batch/samples/mail/UserMailItemProcessor.java

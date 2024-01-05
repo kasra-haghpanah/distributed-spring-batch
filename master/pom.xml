@@ -23,6 +23,18 @@
     </dependencies>
 
     <build>
+
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <excludes>
+                    <exclude>**/static/help/**</exclude>
+                    <exclude>**/static/data/**</exclude>
+                    <!--<exclude>application.properties</exclude>-->
+                </excludes>
+            </resource>
+        </resources>
+
         <plugins>
             <plugin>
                 <!-- java -jar master.jar   -->

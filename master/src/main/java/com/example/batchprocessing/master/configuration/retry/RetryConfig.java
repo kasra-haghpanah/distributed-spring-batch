@@ -3,10 +3,9 @@ package com.example.batchprocessing.master.configuration.retry;
 import com.example.batchprocessing.master.configuration.properties.Properties;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.launch.JobOperator;
-import org.springframework.batch.core.launch.NoSuchJobException;
-import org.springframework.batch.core.launch.NoSuchJobExecutionException;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,8 +21,10 @@ import java.net.ConnectException;
 import java.net.SocketException;
 import java.text.MessageFormat;
 import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Configuration
 @DependsOn({"properties"})
