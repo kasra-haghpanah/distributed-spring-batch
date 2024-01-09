@@ -21,6 +21,7 @@ import java.net.ConnectException;
 import java.net.SocketException;
 import java.text.MessageFormat;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -113,12 +114,12 @@ public class RetryConfig {
                     List<JobExecution> jobExecutions = jobRepository.findJobExecutions(jobInstances.get(0));
                     JobExecution jobExecution = jobExecutions.get(0);
                     StepExecution stepExecution = jobRepository.getLastStepExecution(jobInstances.get(0), name);
-                    stepExecution.setExitStatus(ExitStatus.FAILED);
-                    //stepExecution.setEndTime(LocalDateTime.now());
+                    stepExecution.setExitStatus(ExitStatus.STOPPED);
+                    stepExecution.setEndTime(LocalDateTime.now());
                     jobRepository.update(stepExecution);
 
-                    jobExecution.setStatus(BatchStatus.STARTED);
-                    //jobExecution.setEndTime(LocalDateTime.now());
+                    jobExecution.setStatus(BatchStatus.STOPPED);
+                    jobExecution.setEndTime(LocalDateTime.now());
                     jobRepository.update(jobExecution);
                     jobOperator.restart(jobExecution.getJobId());
                 }

@@ -109,15 +109,6 @@ public class JobTwo {
                 .build();
     }*/
 
-    @Bean
-    public ItemWriter<Email> itemWriter() {
-        return items -> {
-            for (Email item : items) {
-                System.out.println("item = " + item);
-            }
-        };
-    }
-
     @Bean // remoteChunk
     @Qualifier("remoteEmailStep")
     public TaskletStep remoteEmailStep(

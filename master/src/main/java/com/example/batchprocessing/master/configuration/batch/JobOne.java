@@ -197,8 +197,8 @@ public class JobOne {
                 .reader(gameByYearReader)
                 .writer(gameByYearWriter)
                 .faultTolerant()
-                .skip(IllegalArgumentException.class)
-                .skipLimit(3)
+                .retry(Exception.class)
+                .retryLimit(3)
                 .listener(new StepExecutionListener() {
                     @Override
                     public void beforeStep(StepExecution stepExecution) {
@@ -306,6 +306,9 @@ public class JobOne {
                 .processor(managerItemProcessor)
                 .outputChannel(outbound) // requests sent to workers
                 .inputChannel(inbound)   // replies received from workers
+                .faultTolerant()
+                .retry(Exception.class)
+                .retryLimit(100)
                 .listener(new StepExecutionListener() {
                     @Override
                     public void beforeStep(StepExecution stepExecution) {
@@ -386,7 +389,10 @@ public class JobOne {
                     return objectMapper.writeValueAsString(yearReport);
                 })
                 .outputChannel(outbound) // requests sent to workers
-                .inputChannel(inbound)   // replies received from workers
+                .inputChannel(inbound) // replies received from workers
+                .faultTolerant()
+                .retry(Exception.class)
+                .retryLimit(100)
                 .transactionManager(platformTransactionManager)
                 .listener(new StepExecutionListener() {
                     @Override

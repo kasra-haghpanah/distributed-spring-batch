@@ -15,6 +15,7 @@ public class Properties {
 
     public Properties(Environment environment) {
 
+        config.put("time.zone", environment.getProperty("time.zone"));
         config.put("retry.max-attempts", environment.getProperty("retry.max-attempts"));
         config.put("retry.fixed-backoff", environment.getProperty("retry.fixed-backoff"));
 
@@ -54,6 +55,9 @@ public class Properties {
         return (T) config.get(key);
     }
 
+    public static String getTimeZone() {
+        return get("time.zone", String.class);
+    }
     public static Integer getRetryMaxAttempts() {
         return JavaUtil.getInteger(get("retry.max-attempts", String.class), 100);
     }
