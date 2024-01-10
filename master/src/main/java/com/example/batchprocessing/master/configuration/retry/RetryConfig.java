@@ -73,8 +73,7 @@ public class RetryConfig {
 
                 Throwable throwable = context.getLastThrowable();
                 if (throwable != null) {
-                    resumeJob(context, jobOperator, jobRepository, jobSampleOne);
-                    resumeJob(context, jobOperator, jobRepository, jobSampleTwo);
+                    System.out.println(throwable.getMessage());
                 }
 
                 return null;
@@ -84,51 +83,6 @@ public class RetryConfig {
             });
 
         };
-    }
-
-    public static void resumeJob(
-            RetryContext context,
-            JobOperator jobOperator,
-            JobRepository jobRepository,
-            Job job
-    ) throws Exception {
-
-        Throwable throwable = context.getLastThrowable();
-
-        Set<Long> executions = jobOperator.getRunningExecutions(job.getName());//SchedulerConfig.getJobInstanceId("jobSampleOne");
-        for (Long instanceId : executions) {
-            List<Long> longs = jobOperator.getExecutions(instanceId);
-
-
-            Map<Long, String> map = jobOperator.getStepExecutionSummaries(executions.iterator().next());
-            for (Long key : map.keySet()) {
-                String value = map.get(key);
-
-                if (value.indexOf("status=COMPLETED") < 0) {
-
-                    int indexName = value.indexOf("name=");
-                    String name = value.substring(indexName, value.indexOf(",", indexName));
-                    name = name.substring(name.indexOf("=") + 1);
-
-                    List<JobInstance> jobInstances = jobRepository.findJobInstancesByName(job.getName(), 0, 1);
-                    List<JobExecution> jobExecutions = jobRepository.findJobExecutions(jobInstances.get(0));
-                    JobExecution jobExecution = jobExecutions.get(0);
-                    StepExecution stepExecution = jobRepository.getLastStepExecution(jobInstances.get(0), name);
-                    stepExecution.setExitStatus(ExitStatus.STOPPED);
-                    stepExecution.setEndTime(LocalDateTime.now());
-                    jobRepository.update(stepExecution);
-
-                    jobExecution.setStatus(BatchStatus.STOPPED);
-                    jobExecution.setEndTime(LocalDateTime.now());
-                    jobRepository.update(jobExecution);
-                    jobOperator.restart(jobExecution.getJobId());
-                }
-            }
-
-            System.out.println(map);
-        }
-
-
     }
 
     @Recover

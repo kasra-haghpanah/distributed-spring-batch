@@ -30,6 +30,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.example.batchprocessing.master.configuration.batch.JobLauncherConfig.restart;
+
 @Configuration
 @DependsOn("properties")
 @ConditionalOnProperty(value = "enable.schedule", havingValue = "true")
@@ -65,8 +67,8 @@ public class SchedulerConfig {
     public String scheduleJobOne(
             @Qualifier("taskScheduler") TaskScheduler taskScheduler,
             @Qualifier("taskExecutorJobLauncher") JobLauncher taskExecutorJobLauncher,
-            JobOperator jobOperator,
             @Qualifier("jobSampleOne") Job jobSampleOne,
+            JobOperator jobOperator,
             JobExplorer jobExplorer,
             JobRepository jobRepository
     ) {
@@ -76,8 +78,7 @@ public class SchedulerConfig {
                     .addString("uuid", UUID.randomUUID().toString())
                     .addDate("date", new Date())
                     .toJobParameters();
-            //runJobLauncher(taskExecutorJobLauncher, jobOperator, jobSampleOne, jobParameters);
-            restart(taskExecutorJobLauncher, jobOperator, jobSampleOne, jobParameters, jobExplorer, jobRepository);
+            restart(taskExecutorJobLauncher, jobSampleOne, jobOperator, jobParameters, jobExplorer, jobRepository);
         };
         taskScheduler.scheduleWithFixedDelay(task, Duration.ofSeconds(Properties.getBatchJobLauncherScheduleWithFixedDelay()));
         return null;
@@ -88,8 +89,8 @@ public class SchedulerConfig {
     public String scheduleJobTwo(
             @Qualifier("taskScheduler") TaskScheduler taskScheduler,
             @Qualifier("taskExecutorJobLauncher") JobLauncher taskExecutorJobLauncher,
-            JobOperator jobOperator,
             @Qualifier("jobSampleTwo") Job jobSampleTwo,
+            JobOperator jobOperator,
             JobExplorer jobExplorer,
             JobRepository jobRepository
 
@@ -103,88 +104,10 @@ public class SchedulerConfig {
                     .addString("inputFile", "classpath:data/email.json")
                     .addString("outputFile", "classpath:data/email-out.json")
                     .toJobParameters();
-            //runJobLauncher(taskExecutorJobLauncher, jobOperator, jobSampleTwo, jobParameters);
-            restart(taskExecutorJobLauncher, jobOperator, jobSampleTwo, jobParameters, jobExplorer, jobRepository);
+            restart(taskExecutorJobLauncher, jobSampleTwo, jobOperator, jobParameters, jobExplorer, jobRepository);
         };
         taskScheduler.scheduleWithFixedDelay(task, Duration.ofSeconds(Properties.getBatchJobLauncherScheduleWithFixedDelay()));
         return null;
     }
-
-    public void restart(
-            JobLauncher jobLauncher,
-            JobOperator jobOperator,
-            Job job,
-            JobParameters jobParameters,
-            JobExplorer jobExplorer,
-            JobRepository jobRepository
-    ) {
-
-        boolean isLaunch = runJobLauncher(jobLauncher, jobOperator, job, jobParameters);
-        if (isLaunch) {
-            return;
-        }
-        try {
-            List<JobInstance> jobInstances = jobExplorer.getJobInstances(job.getName(), 0, 1);// this will get one latest job from the database
-            if (!CollectionUtils.isEmpty(jobInstances)) {
-                JobInstance jobInstance = jobInstances.get(0);
-                List<JobExecution> jobExecutions = jobExplorer.getJobExecutions(jobInstance);
-                if (!CollectionUtils.isEmpty(jobExecutions)) {
-                    for (JobExecution execution : jobExecutions) {
-                        // If the job status is STARTED then update the status to FAILED and restart the job using JobOperator.java
-                        if (execution.getStatus().equals(BatchStatus.STARTED)) {
-                            execution.setEndTime(LocalDateTime.now());
-                            execution.setStatus(BatchStatus.FAILED);
-                            execution.setExitStatus(ExitStatus.FAILED);
-                            jobRepository.update(execution);
-                            jobOperator.restart(execution.getId());
-                        }
-                    }
-                }
-            }
-        } catch (Exception e1) {
-            e1.printStackTrace();
-        }
-    }
-
-
-    public static boolean runJobLauncher(
-            JobLauncher jobLauncher,
-            JobOperator jobOperator,
-            Job job,
-            JobParameters jobParameters
-    ) {
-        Set<Long> executions = null;
-        try {
-/*
-                registry.destroySingleton("dataSourceOne");
-                registry.registerSingleton("dataSourceOne", createDataSource());
-
-                Set<Long> executions = jobOperator.getRunningExecutions("jobSampleOne");
-                jobOperator.startNextInstance("jobSampleOne");
-                List<Long> executions = jobOperator.getJobInstances("jobSampleOne", 0, 1);
-                jobOperator.restart(executions.get(0));
-                jobOperator.stop(executions.iterator().next());
-                jobOperator.abandon(executions.iterator().next());
-                */
-            executions = jobOperator.getRunningExecutions(job.getName());
-
-        } catch (NoSuchJobException e) {
-            throw new RuntimeException(e);
-        }
-        if (executions.size() == 0) {
-            JobExecution run = null;
-            try {
-                run = jobLauncher.run(job, jobParameters);
-                JobInstance jobInstance = run.getJobInstance();
-                System.out.println(MessageFormat.format("jobName: {0} , instanceId: {1}", jobInstance.getJobName(), jobInstance.getInstanceId()));
-            } catch (JobExecutionAlreadyRunningException | JobRestartException |
-                     JobInstanceAlreadyCompleteException | JobParametersInvalidException e) {
-                System.out.println(e.getMessage());
-            }
-            return true;
-        }
-        return false;
-    }
-
 
 }
