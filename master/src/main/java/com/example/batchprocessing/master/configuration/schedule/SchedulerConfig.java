@@ -9,6 +9,7 @@ import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -61,8 +62,7 @@ public class SchedulerConfig {
     }
 
     @Bean
-    @Lazy
-    public String scheduleJobOne(
+    public CommandLineRunner scheduleJobOne(
             @Qualifier("taskScheduler") TaskScheduler taskScheduler,
             @Qualifier("taskExecutorJobLauncher") JobLauncher taskExecutorJobLauncher,
             @Qualifier("jobSampleOne") Job jobSampleOne,
@@ -84,7 +84,7 @@ public class SchedulerConfig {
 
 
     @Bean
-    public String scheduleJobTwo(
+    public CommandLineRunner scheduleJobTwo(
             @Qualifier("taskScheduler") TaskScheduler taskScheduler,
             @Qualifier("taskExecutorJobLauncher") JobLauncher taskExecutorJobLauncher,
             @Qualifier("jobSampleTwo") Job jobSampleTwo,
