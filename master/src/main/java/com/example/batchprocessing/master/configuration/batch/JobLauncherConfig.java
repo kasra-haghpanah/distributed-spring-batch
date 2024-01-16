@@ -14,8 +14,6 @@ import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.TaskScheduler;
-import org.springframework.util.CollectionUtils;
 
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
@@ -44,19 +42,7 @@ public class JobLauncherConfig {
     ) {
         Set<Long> executions = null;
         try {
-/*
-                registry.destroySingleton("dataSourceOne");
-                registry.registerSingleton("dataSourceOne", createDataSource());
-
-                Set<Long> executions = jobOperator.getRunningExecutions("jobSampleOne");
-                jobOperator.startNextInstance("jobSampleOne");
-                List<Long> executions = jobOperator.getJobInstances("jobSampleOne", 0, 1);
-                jobOperator.restart(executions.get(0));
-                jobOperator.stop(executions.iterator().next());
-                jobOperator.abandon(executions.iterator().next());
-                */
             executions = jobOperator.getRunningExecutions(job.getName());
-
         } catch (NoSuchJobException e) {
             throw new RuntimeException(e);
         }
@@ -94,17 +80,13 @@ public class JobLauncherConfig {
 
                     try {
                         jobOperator.restart(jobExecution.getId());
-                        // jobOperator.start(job.getName(), properties);
                     } catch (JobInstanceAlreadyCompleteException |
                              NoSuchJobExecutionException |
                              NoSuchJobException |
                              JobRestartException |
                              JobParametersInvalidException e) {
                         throw new RuntimeException(e);
-                    }/* catch (JobInstanceAlreadyExistsException | JobParametersInvalidException |
-                               NoSuchJobException e) {
-                        throw new RuntimeException(e);
-                    }*/
+                    }
                 }
 
             }
