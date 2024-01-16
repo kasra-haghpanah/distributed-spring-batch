@@ -1,23 +1,21 @@
 package com.example.batchprocessing.master.configuration.schedule;
 
 import com.example.batchprocessing.master.configuration.properties.Properties;
-import org.springframework.batch.core.*;
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.JobOperator;
-import org.springframework.batch.core.launch.NoSuchJobException;
-import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
-import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
 import org.springframework.batch.core.repository.JobRepository;
-import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
-import org.springframework.util.CollectionUtils;
 
 import java.text.MessageFormat;
 import java.time.Duration;
@@ -25,12 +23,10 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
-import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.example.batchprocessing.master.configuration.batch.JobLauncherConfig.restart;
+import static com.example.batchprocessing.master.configuration.batch.JobLauncherConfig.runJobLauncher;
 
 @Configuration
 @DependsOn("properties")
@@ -41,6 +37,7 @@ public class SchedulerConfig {
 
     @Bean
     @Qualifier("taskScheduler")
+    @Lazy
     public TaskScheduler taskScheduler() {
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
         scheduler.setPoolSize(10);
@@ -64,6 +61,7 @@ public class SchedulerConfig {
     }
 
     @Bean
+    @Lazy
     public String scheduleJobOne(
             @Qualifier("taskScheduler") TaskScheduler taskScheduler,
             @Qualifier("taskExecutorJobLauncher") JobLauncher taskExecutorJobLauncher,
@@ -78,7 +76,7 @@ public class SchedulerConfig {
                     .addString("uuid", UUID.randomUUID().toString())
                     .addDate("date", new Date())
                     .toJobParameters();
-            restart(taskExecutorJobLauncher, jobSampleOne, jobOperator, jobParameters, jobExplorer, jobRepository);
+            runJobLauncher(taskExecutorJobLauncher, jobSampleOne, jobOperator, jobParameters, jobExplorer, jobRepository);
         };
         taskScheduler.scheduleWithFixedDelay(task, Duration.ofSeconds(Properties.getBatchJobLauncherScheduleWithFixedDelay()));
         return null;
@@ -104,7 +102,8 @@ public class SchedulerConfig {
                     .addString("inputFile", "classpath:data/email.json")
                     .addString("outputFile", "classpath:data/email-out.json")
                     .toJobParameters();
-            restart(taskExecutorJobLauncher, jobSampleTwo, jobOperator, jobParameters, jobExplorer, jobRepository);
+
+            runJobLauncher(taskExecutorJobLauncher, jobSampleTwo, jobOperator, jobParameters, jobExplorer, jobRepository);
         };
         taskScheduler.scheduleWithFixedDelay(task, Duration.ofSeconds(Properties.getBatchJobLauncherScheduleWithFixedDelay()));
         return null;

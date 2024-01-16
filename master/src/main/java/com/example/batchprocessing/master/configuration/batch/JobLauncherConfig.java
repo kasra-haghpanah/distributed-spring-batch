@@ -5,6 +5,7 @@ import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.batch.core.launch.NoSuchJobException;
+import org.springframework.batch.core.launch.NoSuchJobExecutionException;
 import org.springframework.batch.core.launch.support.TaskExecutorJobLauncher;
 import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
 import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
@@ -13,6 +14,7 @@ import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.util.CollectionUtils;
 
 import java.text.MessageFormat;
@@ -32,48 +34,13 @@ public class JobLauncherConfig {
         return jobLauncher;
     }
 
-    public static void restart(
+    public static boolean runJobLauncher(
             JobLauncher jobLauncher,
             Job job,
             JobOperator jobOperator,
             JobParameters jobParameters,
             JobExplorer jobExplorer,
             JobRepository jobRepository
-    ) {
-
-        boolean isLaunch = runJobLauncher(jobLauncher, job, jobOperator, jobParameters);
-        if (isLaunch) {
-            return;
-        }
-        try {
-            List<JobInstance> jobInstances = jobExplorer.getJobInstances(job.getName(), 0, 1);// this will get one latest job from the database
-            if (!CollectionUtils.isEmpty(jobInstances)) {
-                JobInstance jobInstance = jobInstances.get(0);
-                List<JobExecution> jobExecutions = jobExplorer.getJobExecutions(jobInstance);
-                if (!CollectionUtils.isEmpty(jobExecutions)) {
-                    for (JobExecution execution : jobExecutions) {
-                        // If the job status is STARTED then update the status to FAILED and restart the job using JobOperator.java
-                        if (execution.getStatus().equals(BatchStatus.STARTED)) {
-                            execution.setEndTime(LocalDateTime.now());
-                            execution.setStatus(BatchStatus.FAILED);
-                            execution.setExitStatus(ExitStatus.FAILED);
-                            jobRepository.update(execution);
-                            jobOperator.restart(execution.getId());
-                        }
-                    }
-                }
-            }
-        } catch (Exception e1) {
-            e1.printStackTrace();
-        }
-    }
-
-
-    public static boolean runJobLauncher(
-            JobLauncher jobLauncher,
-            Job job,
-            JobOperator jobOperator,
-            JobParameters jobParameters
     ) {
         Set<Long> executions = null;
         try {
@@ -104,6 +71,44 @@ public class JobLauncherConfig {
                 System.out.println(e.getMessage());
             }
             return true;
+        } else {
+            Long executionId = executions.iterator().next();
+            JobInstance jobInstance = jobExplorer.getJobInstance(executionId);
+            List<JobExecution> jobExecutions = jobExplorer.getJobExecutions(jobInstance);
+
+            for (JobExecution jobExecution : jobExecutions) {
+
+                if (
+                        (!jobExecution.isRunning() && jobExecution.getStatus().equals(BatchStatus.STARTED))
+                                ||
+                                jobExecution.getStatus().equals(BatchStatus.UNKNOWN)
+                                ||
+                                jobExecution.getExitStatus().equals(ExitStatus.UNKNOWN)
+                ) {
+                    JobParameters parameters = jobExecution.getJobParameters();
+
+                    jobExecution.setEndTime(LocalDateTime.now());
+                    jobExecution.setStatus(BatchStatus.FAILED);
+                    jobExecution.setExitStatus(ExitStatus.FAILED);
+                    jobRepository.update(jobExecution);
+
+                    try {
+                        jobOperator.restart(jobExecution.getId());
+                        // jobOperator.start(job.getName(), properties);
+                    } catch (JobInstanceAlreadyCompleteException |
+                             NoSuchJobExecutionException |
+                             NoSuchJobException |
+                             JobRestartException |
+                             JobParametersInvalidException e) {
+                        throw new RuntimeException(e);
+                    }/* catch (JobInstanceAlreadyExistsException | JobParametersInvalidException |
+                               NoSuchJobException e) {
+                        throw new RuntimeException(e);
+                    }*/
+                }
+
+            }
+
         }
         return false;
     }
