@@ -14,7 +14,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
@@ -38,7 +37,6 @@ public class SchedulerConfig {
 
     @Bean
     @Qualifier("taskScheduler")
-    @Lazy
     public TaskScheduler taskScheduler() {
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
         scheduler.setPoolSize(10);
@@ -48,7 +46,7 @@ public class SchedulerConfig {
     }
 
     //@Bean
-    public String scheduleTask(@Qualifier("taskScheduler") TaskScheduler taskScheduler) {
+    public CommandLineRunner scheduleTask(@Qualifier("taskScheduler") TaskScheduler taskScheduler) {
 
         Runnable task = () -> {
             int counter = atomicInteger.incrementAndGet();

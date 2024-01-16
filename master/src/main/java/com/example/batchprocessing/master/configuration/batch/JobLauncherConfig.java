@@ -32,7 +32,7 @@ public class JobLauncherConfig {
         return jobLauncher;
     }
 
-    public static boolean runJobLauncher(
+    public static void runJobLauncher(
             JobLauncher jobLauncher,
             Job job,
             JobOperator jobOperator,
@@ -56,7 +56,6 @@ public class JobLauncherConfig {
                      JobInstanceAlreadyCompleteException | JobParametersInvalidException e) {
                 System.out.println(e.getMessage());
             }
-            return true;
         } else {
             Long executionId = executions.iterator().next();
             JobInstance jobInstance = jobExplorer.getJobInstance(executionId);
@@ -92,7 +91,6 @@ public class JobLauncherConfig {
             }
 
         }
-        return false;
     }
 
 
