@@ -1,6 +1,5 @@
 package com.example.batchprocessing.master.configuration.batch;
 
-import com.example.batchprocessing.master.configuration.util.JavaUtil;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobLauncher;
@@ -18,7 +17,6 @@ import org.springframework.context.annotation.Configuration;
 
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Set;
 
 @Configuration
@@ -41,12 +39,7 @@ public class JobLauncherConfig {
             JobExplorer jobExplorer,
             JobRepository jobRepository
     ) {
-        try {
-            Set<Long> longSet = jobOperator.getRunningExecutions(job.getName());
-        } catch (NoSuchJobException e) {
-            throw new RuntimeException(e);
-        }
-
+        //Set<Long> longSet = jobOperator.getRunningExecutions(job.getName());
         Set<JobExecution> jobExecutionSet = jobExplorer.findRunningJobExecutions(job.getName());
 
         if (jobExecutionSet.size() == 0) {
@@ -59,14 +52,17 @@ public class JobLauncherConfig {
             ExitStatus exitStatus = jobExecution.getExitStatus();
             BatchStatus batchStatus = jobExecution.getStatus();
             LocalDateTime endtime = jobExecution.getEndTime();
-            if (!batchStatus.equals(BatchStatus.COMPLETED) && !jobExecution.isRunning()) {
+            if (!batchStatus.equals(BatchStatus.COMPLETED)) {
                 if (
-                        (batchStatus.equals(BatchStatus.FAILED) || batchStatus.equals(BatchStatus.UNKNOWN))
+                        (!jobExecution.isRunning() && (batchStatus.equals(BatchStatus.FAILED) || batchStatus.equals(BatchStatus.UNKNOWN)))
+                                ||
+                                (jobExecution.isRunning() && jobExecution.getStartTime().equals(jobExecution.getLastUpdated()) && batchStatus.equals(BatchStatus.STARTED) && exitStatus.equals(ExitStatus.UNKNOWN))// when the application is stopped
                 ) {
-                    jobExecution.setEndTime(LocalDateTime.now());
+                    jobExecution.setLastUpdated(LocalDateTime.now());
                     jobExecution.setStatus(BatchStatus.FAILED);
                     jobExecution.setExitStatus(ExitStatus.FAILED);
                     jobExecution.upgradeStatus(BatchStatus.FAILED);
+                    jobExecution.setEndTime(LocalDateTime.now());
                     jobRepository.update(jobExecution);
                     restart(jobOperator, jobExecution);
                 }
