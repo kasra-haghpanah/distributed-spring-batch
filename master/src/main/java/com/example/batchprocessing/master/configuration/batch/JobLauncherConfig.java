@@ -1,5 +1,6 @@
 package com.example.batchprocessing.master.configuration.batch;
 
+import com.example.batchprocessing.master.configuration.util.JavaUtil;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobLauncher;
@@ -40,49 +41,67 @@ public class JobLauncherConfig {
             JobExplorer jobExplorer,
             JobRepository jobRepository
     ) {
-        Set<JobExecution>  jobExecutions = jobExplorer.findRunningJobExecutions(job.getName());
+        try {
+            Set<Long> longSet = jobOperator.getRunningExecutions(job.getName());
+        } catch (NoSuchJobException e) {
+            throw new RuntimeException(e);
+        }
 
-        if (jobExecutions.size() == 0) {
-            JobExecution run = null;
-            try {
-                run = jobLauncher.run(job, jobParameters);
-                JobInstance jobInstance = run.getJobInstance();
-                System.out.println(MessageFormat.format("jobName: {0} , instanceId: {1}", jobInstance.getJobName(), jobInstance.getInstanceId()));
-            } catch (JobExecutionAlreadyRunningException | JobRestartException |
-                     JobInstanceAlreadyCompleteException | JobParametersInvalidException e) {
-                System.out.println(e.getMessage());
-            }
-        } else {
+        Set<JobExecution> jobExecutionSet = jobExplorer.findRunningJobExecutions(job.getName());
 
-            for (JobExecution jobExecution : jobExecutions) {
+        if (jobExecutionSet.size() == 0) {
+            JobExecution jobExecution = run(jobLauncher, job, jobParameters);
+            System.out.println(MessageFormat.format("jobName: {0} , instanceId: {1} , executionId: {2}", jobExecution.getJobInstance().getJobName(), jobExecution.getJobInstance().getInstanceId(), jobExecution.getJobId()));
+            return;
+        }
 
+        for (JobExecution jobExecution : jobExecutionSet) {
+            ExitStatus exitStatus = jobExecution.getExitStatus();
+            BatchStatus batchStatus = jobExecution.getStatus();
+            LocalDateTime endtime = jobExecution.getEndTime();
+            if (!batchStatus.equals(BatchStatus.COMPLETED) && !jobExecution.isRunning()) {
                 if (
-                        (!jobExecution.isRunning() && jobExecution.getStatus().equals(BatchStatus.STARTED))
-                                ||
-                                jobExecution.getStatus().equals(BatchStatus.UNKNOWN)
-                                ||
-                                jobExecution.getExitStatus().equals(ExitStatus.UNKNOWN)
+                        (batchStatus.equals(BatchStatus.FAILED) || batchStatus.equals(BatchStatus.UNKNOWN))
                 ) {
-                    JobParameters parameters = jobExecution.getJobParameters();
-
                     jobExecution.setEndTime(LocalDateTime.now());
                     jobExecution.setStatus(BatchStatus.FAILED);
                     jobExecution.setExitStatus(ExitStatus.FAILED);
+                    jobExecution.upgradeStatus(BatchStatus.FAILED);
                     jobRepository.update(jobExecution);
-
-                    try {
-                        jobOperator.restart(jobExecution.getId());
-                    } catch (JobInstanceAlreadyCompleteException |
-                             NoSuchJobExecutionException |
-                             NoSuchJobException |
-                             JobRestartException |
-                             JobParametersInvalidException e) {
-                        throw new RuntimeException(e);
-                    }
+                    restart(jobOperator, jobExecution);
                 }
-
             }
+        }
 
+    }
+
+    public static Long restart(JobOperator jobOperator, JobExecution jobExecution) {
+        try {
+            return jobOperator.restart(jobExecution.getId());
+        } catch (JobInstanceAlreadyCompleteException e) {
+            throw new RuntimeException(e);
+        } catch (NoSuchJobExecutionException e) {
+            throw new RuntimeException(e);
+        } catch (NoSuchJobException e) {
+            throw new RuntimeException(e);
+        } catch (JobRestartException e) {
+            throw new RuntimeException(e);
+        } catch (JobParametersInvalidException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static JobExecution run(JobLauncher jobLauncher, Job job, JobParameters jobParameters) {
+        try {
+            return jobLauncher.run(job, jobParameters);
+        } catch (JobExecutionAlreadyRunningException e) {
+            throw new RuntimeException(e);
+        } catch (JobRestartException e) {
+            throw new RuntimeException(e);
+        } catch (JobInstanceAlreadyCompleteException e) {
+            throw new RuntimeException(e);
+        } catch (JobParametersInvalidException e) {
+            throw new RuntimeException(e);
         }
     }
 

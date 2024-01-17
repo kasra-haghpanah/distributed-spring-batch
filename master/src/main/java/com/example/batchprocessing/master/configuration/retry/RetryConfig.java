@@ -46,7 +46,7 @@ public class RetryConfig {
                 .build();
     }
 
-    @Bean
+    //@Bean
     public CommandLineRunner commandLineRunner(RetryTemplate retryTemplate) {
 
         return args -> {
