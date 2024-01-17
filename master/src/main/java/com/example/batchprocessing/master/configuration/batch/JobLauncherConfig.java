@@ -44,7 +44,7 @@ public class JobLauncherConfig {
 
         if (jobExecutionSet.size() == 0) {
             JobExecution jobExecution = run(jobLauncher, job, jobParameters);
-            System.out.println(MessageFormat.format("jobName: {0} , instanceId: {1} , executionId: {2}", jobExecution.getJobInstance().getJobName(), jobExecution.getJobInstance().getInstanceId(), jobExecution.getJobId()));
+            System.out.println(MessageFormat.format("jobName: {0} , instanceId: {1} , executionId: {2}", jobExecution.getJobInstance().getJobName(), jobExecution.getJobInstance().getInstanceId(), jobExecution.getId()));
             return;
         }
 
