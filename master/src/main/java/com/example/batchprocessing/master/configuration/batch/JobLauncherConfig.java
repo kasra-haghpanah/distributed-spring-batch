@@ -40,13 +40,9 @@ public class JobLauncherConfig {
             JobExplorer jobExplorer,
             JobRepository jobRepository
     ) {
-        Set<Long> executions = null;
-        try {
-            executions = jobOperator.getRunningExecutions(job.getName());
-        } catch (NoSuchJobException e) {
-            throw new RuntimeException(e);
-        }
-        if (executions.size() == 0) {
+        Set<JobExecution>  jobExecutions = jobExplorer.findRunningJobExecutions(job.getName());
+
+        if (jobExecutions.size() == 0) {
             JobExecution run = null;
             try {
                 run = jobLauncher.run(job, jobParameters);
@@ -57,9 +53,6 @@ public class JobLauncherConfig {
                 System.out.println(e.getMessage());
             }
         } else {
-            Long executionId = executions.iterator().next();
-            JobInstance jobInstance = jobExplorer.getJobInstance(executionId);
-            List<JobExecution> jobExecutions = jobExplorer.getJobExecutions(jobInstance);
 
             for (JobExecution jobExecution : jobExecutions) {
 
