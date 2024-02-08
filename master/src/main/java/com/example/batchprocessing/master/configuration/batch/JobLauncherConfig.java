@@ -14,12 +14,15 @@ import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
 
 import java.text.MessageFormat;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Set;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class JobLauncherConfig {
 
     @Bean
@@ -27,6 +30,7 @@ public class JobLauncherConfig {
     public JobLauncher taskExecutorJobLauncher(JobRepository jobRepository) throws Exception {
         TaskExecutorJobLauncher jobLauncher = new TaskExecutorJobLauncher();
         jobLauncher.setJobRepository(jobRepository);
+        //jobLauncher.setTaskExecutor(new SimpleAsyncTaskExecutor());
         jobLauncher.afterPropertiesSet();
         return jobLauncher;
     }
@@ -51,7 +55,8 @@ public class JobLauncherConfig {
         for (JobExecution jobExecution : jobExecutionSet) {
             ExitStatus exitStatus = jobExecution.getExitStatus();
             BatchStatus batchStatus = jobExecution.getStatus();
-            LocalDateTime endtime = jobExecution.getEndTime();
+            LocalDateTime date = Instant.ofEpochMilli(jobExecution.getJobParameters().getDate("date").getTime()).atZone(ZoneId.of("GMT")).toLocalDateTime();
+            //LocalDateTime endtime = jobExecution.getEndTime();
             if (!batchStatus.equals(BatchStatus.COMPLETED)) {
                 if (
                         (!jobExecution.isRunning() && (batchStatus.equals(BatchStatus.FAILED) || batchStatus.equals(BatchStatus.UNKNOWN)))
