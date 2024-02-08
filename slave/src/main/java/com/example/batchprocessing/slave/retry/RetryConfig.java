@@ -20,7 +20,7 @@ import java.text.MessageFormat;
 import java.time.Duration;
 import java.util.Arrays;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @DependsOn({"properties"})
 public class RetryConfig {
 

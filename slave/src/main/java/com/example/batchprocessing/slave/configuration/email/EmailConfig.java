@@ -9,7 +9,7 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 
 import java.util.Properties;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @DependsOn({"properties"})
 public class EmailConfig {
 

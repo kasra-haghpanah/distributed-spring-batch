@@ -9,7 +9,7 @@ import java.text.MessageFormat;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class JobCompletedListener {
 
     // todo: clear this out after the job is done. some sort of listener?

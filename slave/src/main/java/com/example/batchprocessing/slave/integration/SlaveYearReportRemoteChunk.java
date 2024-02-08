@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class SlaveYearReportRemoteChunk {
 
     ItemProcessor<String, YearReport> itemProcessor(ObjectMapper objectMapper) {

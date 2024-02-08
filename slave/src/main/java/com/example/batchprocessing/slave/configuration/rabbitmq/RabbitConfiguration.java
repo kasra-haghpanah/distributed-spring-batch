@@ -18,7 +18,7 @@ import org.springframework.context.annotation.Primary;
 // https://hevodata.com/learn/spring-message-queue/
 // https://medium.com/javarevisited/getting-started-with-rabbitmq-in-spring-boot-6323b9179247
 @DependsOn("properties")
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class RabbitConfiguration {
 
     @Bean

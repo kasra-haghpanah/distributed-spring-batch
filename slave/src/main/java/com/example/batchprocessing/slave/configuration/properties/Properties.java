@@ -8,7 +8,7 @@ import org.springframework.core.env.Environment;
 import java.util.HashMap;
 import java.util.Map;
 
-@Configuration("properties")
+@Configuration(value = "properties",proxyBeanMethods = false)
 public class Properties {
 
     private static final Map<String, Object> config = new HashMap<String, Object>();

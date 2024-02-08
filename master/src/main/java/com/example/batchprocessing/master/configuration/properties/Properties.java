@@ -7,7 +7,7 @@ import org.springframework.core.env.Environment;
 import java.util.HashMap;
 import java.util.Map;
 
-@Configuration("properties")
+@Configuration(value = "properties", proxyBeanMethods = false)
 public class Properties {
 
     public static final String EMPTY_CSV_STATUS = "EMPTY";
@@ -68,6 +68,7 @@ public class Properties {
     public static Long getBatchJobLauncherScheduleWithFixedDelay() {
         return JavaUtil.getLong(get("batch.job-launcher.schedule-with-fixed-delay", String.class), 60l);
     }
+
     public static Integer getRetryMaxAttempts() {
         return JavaUtil.getInteger(get("retry.max-attempts", String.class), 100);
     }
@@ -99,6 +100,7 @@ public class Properties {
     public static Long getDatasourceOneMaximumLifeTime() {
         return JavaUtil.getLong(get("datasource1.maximum.lifetime", String.class), 30l);
     }
+
     public static String getDatasourceTwoUrl() {
         return get("datasource2.url", String.class);
     }

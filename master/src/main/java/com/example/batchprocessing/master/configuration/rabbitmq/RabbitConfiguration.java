@@ -18,7 +18,7 @@ import org.springframework.context.annotation.Primary;
 // https://hevodata.com/learn/spring-message-queue/
 // https://medium.com/javarevisited/getting-started-with-rabbitmq-in-spring-boot-6323b9179247
 @DependsOn("properties")
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class RabbitConfiguration {
 
     @Bean
@@ -86,39 +86,63 @@ public class RabbitConfiguration {
 
 
     @Bean
-    Binding customerRequestBinding(TopicExchange exchange) {
-        return BindingBuilder.bind(customerRequestQueue()).to(exchange).with(Properties.getRabbitmqQueueOne());
+    Binding customerRequestBinding(
+            TopicExchange exchange,
+            @Qualifier("customerRequestQueue") Queue customerRequestQueue
+    ) {
+        return BindingBuilder.bind(customerRequestQueue).to(exchange).with(Properties.getRabbitmqQueueOne());
     }
     @Bean
-    Binding customerReplieBinding(TopicExchange exchange) {
-        return BindingBuilder.bind(customerReplieQueue()).to(exchange).with(Properties.getRabbitmqQueueTwo());
-    }
-
-    @Bean
-    Binding yearReportRequestBinding(TopicExchange exchange) {
-        return BindingBuilder.bind(yearReportRequestQueue()).to(exchange).with(Properties.getRabbitmqQueueThree());
-    }
-    @Bean
-    Binding yearReportReplieBinding(TopicExchange exchange) {
-        return BindingBuilder.bind(yearReportReplieQueue()).to(exchange).with(Properties.getRabbitmqQueueFour());
+    Binding customerReplieBinding(
+            TopicExchange exchange,
+            @Qualifier("customerReplieQueue") Queue customerReplieQueue
+    ) {
+        return BindingBuilder.bind(customerReplieQueue).to(exchange).with(Properties.getRabbitmqQueueTwo());
     }
 
     @Bean
-    Binding gameByYearRequestBinding(TopicExchange exchange) {
-        return BindingBuilder.bind(yearReportRequestQueue()).to(exchange).with(Properties.getRabbitmqQueueFive());
+    Binding yearReportRequestBinding(
+            TopicExchange exchange,
+            @Qualifier("yearReportRequestQueue") Queue yearReportRequestQueue
+            ) {
+        return BindingBuilder.bind(yearReportRequestQueue).to(exchange).with(Properties.getRabbitmqQueueThree());
     }
     @Bean
-    Binding gameByYearReplieBinding(TopicExchange exchange) {
-        return BindingBuilder.bind(yearReportReplieQueue()).to(exchange).with(Properties.getRabbitmqQueueSix());
+    Binding yearReportReplieBinding(
+            TopicExchange exchange,
+            @Qualifier("yearReportReplieQueue") Queue yearReportReplieQueue
+    ) {
+        return BindingBuilder.bind(yearReportReplieQueue).to(exchange).with(Properties.getRabbitmqQueueFour());
     }
 
     @Bean
-    Binding emailRequestBinding(TopicExchange exchange) {
-        return BindingBuilder.bind(yearReportRequestQueue()).to(exchange).with(Properties.getRabbitmqQueueSeven());
+    Binding gameByYearRequestBinding(
+            TopicExchange exchange,
+            @Qualifier("yearReportRequestQueue") Queue yearReportRequestQueue
+            ) {
+        return BindingBuilder.bind(yearReportRequestQueue).to(exchange).with(Properties.getRabbitmqQueueFive());
     }
     @Bean
-    Binding emailReplieBinding(TopicExchange exchange) {
-        return BindingBuilder.bind(yearReportReplieQueue()).to(exchange).with(Properties.getRabbitmqQueueEight());
+    Binding gameByYearReplieBinding(
+            TopicExchange exchange,
+            @Qualifier("yearReportReplieQueue") Queue yearReportReplieQueue
+    ) {
+        return BindingBuilder.bind(yearReportReplieQueue).to(exchange).with(Properties.getRabbitmqQueueSix());
+    }
+
+    @Bean
+    Binding emailRequestBinding(
+            TopicExchange exchange,
+            @Qualifier("yearReportRequestQueue") Queue yearReportRequestQueue
+            ) {
+        return BindingBuilder.bind(yearReportRequestQueue).to(exchange).with(Properties.getRabbitmqQueueSeven());
+    }
+    @Bean
+    Binding emailReplieBinding(
+            TopicExchange exchange,
+            @Qualifier("yearReportReplieQueue") Queue yearReportReplieQueue
+            ) {
+        return BindingBuilder.bind(yearReportReplieQueue).to(exchange).with(Properties.getRabbitmqQueueEight());
     }
 
 /*    @Bean

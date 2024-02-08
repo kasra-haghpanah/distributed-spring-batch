@@ -12,7 +12,7 @@ import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class ApplicationRunner {
 
     final RabbitTemplate rabbitTemplate;

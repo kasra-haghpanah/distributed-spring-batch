@@ -19,7 +19,7 @@ import javax.sql.DataSource;
 import java.net.ConnectException;
 
 @DependsOn({"properties"})
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class JDBConfig {
 
 
@@ -28,7 +28,7 @@ public class JDBConfig {
     @Qualifier("dataSourceOne")
     @BatchDataSource
     @Retryable({ConnectException.class})
-    public DataSource dataSourceOne() {
+    DataSource dataSourceOne() {
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(Properties.getDatasourceOneUrl());
         config.setDriverClassName(Properties.getDatasourceOneDriverClassName());
@@ -42,28 +42,28 @@ public class JDBConfig {
     @Primary
     @Bean
     @Qualifier("batchJdbcTemplate")
-    public JdbcTemplate batchJdbcTemplate() {
-        return new JdbcTemplate(dataSourceOne());
+    JdbcTemplate batchJdbcTemplate(@Qualifier("dataSourceOne") DataSource dataSourceOne) {
+        return new JdbcTemplate(dataSourceOne);
     }
 
     @Primary
     @Bean
     @Qualifier("batchTM")
-    public PlatformTransactionManager batchTM() {
-        return new JdbcTransactionManager(dataSourceOne());
+    PlatformTransactionManager batchTM(@Qualifier("dataSourceOne") DataSource dataSourceOne) {
+        return new JdbcTransactionManager(dataSourceOne);
     }
 
     @Primary
     @Bean
     @Qualifier("batchTT")
-    public TransactionTemplate batchTT() {
-        return new TransactionTemplate(batchTM());
+    TransactionTemplate batchTT(@Qualifier("batchTM") PlatformTransactionManager batchTM) {
+        return new TransactionTemplate(batchTM);
     }
 
     @Bean
     @Qualifier("dataSourceTwo")
     @Retryable({ConnectException.class})
-    public DataSource dataSourceTwo() {
+    DataSource dataSourceTwo() {
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(Properties.getDatasourceTwoUrl());
         config.setDriverClassName(Properties.getDatasourceTwoDriverClassName());
@@ -76,20 +76,20 @@ public class JDBConfig {
 
     @Bean
     @Qualifier("batchDestinationJdbcTemplate")
-    public JdbcTemplate batchDestinationJdbcTemplate() {
-        return new JdbcTemplate(dataSourceTwo());
+    JdbcTemplate batchDestinationJdbcTemplate(@Qualifier("dataSourceTwo") DataSource dataSourceTwo) {
+        return new JdbcTemplate(dataSourceTwo);
     }
 
     @Bean
     @Qualifier("batchDestinationTM")
-    public PlatformTransactionManager batchDestinationTM() {
-        return new JdbcTransactionManager(dataSourceTwo());
+    PlatformTransactionManager batchDestinationTM(@Qualifier("dataSourceTwo") DataSource dataSourceTwo) {
+        return new JdbcTransactionManager(dataSourceTwo);
     }
 
     @Bean
     @Qualifier("batchDestinationTT")
-    public TransactionTemplate batchDestinationTT() {
-        return new TransactionTemplate(batchDestinationTM());
+    TransactionTemplate batchDestinationTT(@Qualifier("batchDestinationTM") PlatformTransactionManager batchDestinationTM) {
+        return new TransactionTemplate(batchDestinationTM);
     }
 
 

@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.example.batchprocessing.master.configuration.batch.JobLauncherConfig.runJobLauncher;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @DependsOn("properties")
 @ConditionalOnProperty(value = "enable.schedule", havingValue = "true")
 public class SchedulerConfig {

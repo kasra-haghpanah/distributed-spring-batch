@@ -27,7 +27,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import java.util.Set;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "bootiful.batch.chunk.master", havingValue = "true")
 @ImportRuntimeHints(MasterRemoteChunkConfig.Hints.class)
 class MasterRemoteChunkConfig {
@@ -61,9 +61,12 @@ class MasterRemoteChunkConfig {
     }
 
     @Bean
-    IntegrationFlow outboundCustomerIntegrationFlow(AmqpTemplate amqpTemplate) {
+    IntegrationFlow outboundCustomerIntegrationFlow(
+            AmqpTemplate amqpTemplate,
+            @Qualifier("masterOutboundCustomerRequest") DirectChannel masterCustomerRequestMessageChannel
+    ) {
         return IntegrationFlow //
-                .from(masterCustomerRequestMessageChannel())//
+                .from(masterCustomerRequestMessageChannel)//
                 .handle(Amqp.outboundAdapter(amqpTemplate).routingKey(Properties.getRabbitmqQueueOne()))//requests
                 .get();
     }
@@ -75,10 +78,13 @@ class MasterRemoteChunkConfig {
     }
 
     @Bean
-    IntegrationFlow inboundCustomerIntegrationFlow(ConnectionFactory connectionFactory) {
+    IntegrationFlow inboundCustomerIntegrationFlow(
+            ConnectionFactory connectionFactory,
+            @Qualifier("masterInboundCustomerReply") QueueChannel masterCustomerReplieMessageChannel
+            ) {
         return IntegrationFlow//
                 .from(Amqp.inboundAdapter(connectionFactory, Properties.getRabbitmqQueueTwo()))//replies
-                .channel(masterCustomerReplieMessageChannel())//
+                .channel(masterCustomerReplieMessageChannel)//
                 .get();
     }
 
@@ -89,9 +95,12 @@ class MasterRemoteChunkConfig {
     }
 
     @Bean
-    IntegrationFlow outboundYearReportIntegrationFlow(AmqpTemplate amqpTemplate) {
+    IntegrationFlow outboundYearReportIntegrationFlow(
+            AmqpTemplate amqpTemplate,
+            @Qualifier("masterOutboundYearReport") DirectChannel masterYearReportRequestMessageChannel
+            ) {
         return IntegrationFlow //
-                .from(masterYearReportRequestMessageChannel())//
+                .from(masterYearReportRequestMessageChannel)//
                 .handle(Amqp.outboundAdapter(amqpTemplate).routingKey(Properties.getRabbitmqQueueThree()))//requests
                 .get();
     }
@@ -103,10 +112,13 @@ class MasterRemoteChunkConfig {
     }
 
     @Bean
-    IntegrationFlow inboundYearReportIntegrationFlow(ConnectionFactory connectionFactory) {
+    IntegrationFlow inboundYearReportIntegrationFlow(
+            ConnectionFactory connectionFactory,
+            @Qualifier("masterInboundYearReport") QueueChannel masterYearReportReplieMessageChannel
+    ) {
         return IntegrationFlow//
                 .from(Amqp.inboundAdapter(connectionFactory, Properties.getRabbitmqQueueFour()))//replies
-                .channel(masterYearReportReplieMessageChannel())//
+                .channel(masterYearReportReplieMessageChannel)//
                 .get();
     }
 
@@ -117,9 +129,12 @@ class MasterRemoteChunkConfig {
     }
 
     @Bean
-    IntegrationFlow outboundGameByYearIntegrationFlow(AmqpTemplate amqpTemplate) {
+    IntegrationFlow outboundGameByYearIntegrationFlow(
+            AmqpTemplate amqpTemplate,
+            @Qualifier("masterOutboundGameByYear") DirectChannel masterOutboundGameByYear
+    ) {
         return IntegrationFlow //
-                .from(masterOutboundGameByYear())//
+                .from(masterOutboundGameByYear)//
                 .handle(Amqp.outboundAdapter(amqpTemplate).routingKey(Properties.getRabbitmqQueueFive()))//requests
                 .get();
     }
@@ -131,10 +146,13 @@ class MasterRemoteChunkConfig {
     }
 
     @Bean
-    IntegrationFlow inboundGameByYearIntegrationFlow(ConnectionFactory connectionFactory) {
+    IntegrationFlow inboundGameByYearIntegrationFlow(
+            ConnectionFactory connectionFactory,
+            @Qualifier("masterInboundGameByYear") QueueChannel masterInboundGameByYear
+    ) {
         return IntegrationFlow//
                 .from(Amqp.inboundAdapter(connectionFactory, Properties.getRabbitmqQueueSix()))//replies
-                .channel(masterInboundGameByYear())//
+                .channel(masterInboundGameByYear)//
                 .get();
     }
 
@@ -149,9 +167,12 @@ class MasterRemoteChunkConfig {
     }
 
     @Bean
-    IntegrationFlow outboundEmailIntegrationFlow(AmqpTemplate amqpTemplate) {
+    IntegrationFlow outboundEmailIntegrationFlow(
+            AmqpTemplate amqpTemplate,
+            @Qualifier("masterOutboundEmail") DirectChannel masterOutboundEmail
+    ) {
         return IntegrationFlow //
-                .from(masterOutboundEmail())//
+                .from(masterOutboundEmail)//
                 .handle(Amqp.outboundAdapter(amqpTemplate).routingKey(Properties.getRabbitmqQueueSeven()))//requests
                 .get();
     }
@@ -163,10 +184,13 @@ class MasterRemoteChunkConfig {
     }
 
     @Bean
-    IntegrationFlow inboundEmailIntegrationFlow(ConnectionFactory connectionFactory) {
+    IntegrationFlow inboundEmailIntegrationFlow(
+            ConnectionFactory connectionFactory,
+            @Qualifier("masterInboundEmail") QueueChannel masterInboundEmail
+    ) {
         return IntegrationFlow//
                 .from(Amqp.inboundAdapter(connectionFactory, Properties.getRabbitmqQueueEight()))//replies
-                .channel(masterInboundEmail())//
+                .channel(masterInboundEmail)//
                 .get();
     }
 

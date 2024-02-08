@@ -20,7 +20,7 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ImportRuntimeHints(ChunkAutoConfiguration.Hints.class)
 class ChunkAutoConfiguration {
 

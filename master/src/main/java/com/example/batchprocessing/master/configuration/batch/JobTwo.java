@@ -32,7 +32,7 @@ import java.text.MessageFormat;
 import java.util.Map;
 import java.util.Objects;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class JobTwo {
 
     public class BasicPartitioner extends SimplePartitioner {

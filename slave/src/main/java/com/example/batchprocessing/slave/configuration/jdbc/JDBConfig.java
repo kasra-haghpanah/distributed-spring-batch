@@ -19,7 +19,7 @@ import javax.sql.DataSource;
 import java.net.ConnectException;
 
 @DependsOn({"properties"})
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class JDBConfig {
 
 
@@ -42,21 +42,22 @@ public class JDBConfig {
     @Primary
     @Bean
     @Qualifier("batchJdbcTemplate")
-    public JdbcTemplate batchJdbcTemplate() {
-        return new JdbcTemplate(dataSourceOne());
+    public JdbcTemplate batchJdbcTemplate(@Qualifier("dataSourceOne") DataSource dataSourceOne) {
+        return new JdbcTemplate(dataSourceOne);
     }
 
     @Primary
     @Bean
     @Qualifier("batchTM")
-    public PlatformTransactionManager batchTM() {
-        return new JdbcTransactionManager(dataSourceOne());
+    public PlatformTransactionManager batchTM(@Qualifier("dataSourceOne") DataSource dataSourceOne) {
+        return new JdbcTransactionManager(dataSourceOne);
     }
+
     @Primary
     @Bean
     @Qualifier("batchTT")
-    public TransactionTemplate batchTT(){
-        return new TransactionTemplate(batchTM());
+    public TransactionTemplate batchTT(@Qualifier("batchTM") PlatformTransactionManager batchTM) {
+        return new TransactionTemplate(batchTM);
     }
 
     @Bean
@@ -75,19 +76,20 @@ public class JDBConfig {
 
     @Bean
     @Qualifier("batchDestinationJdbcTemplate")
-    public JdbcTemplate batchDestinationJdbcTemplate() {
-        return new JdbcTemplate(dataSourceTwo());
+    public JdbcTemplate batchDestinationJdbcTemplate(@Qualifier("dataSourceTwo") DataSource dataSourceTwo) {
+        return new JdbcTemplate(dataSourceTwo);
     }
 
     @Bean
     @Qualifier("batchDestinationTM")
-    public PlatformTransactionManager batchDestinationTM() {
-        return new JdbcTransactionManager(dataSourceTwo());
+    public PlatformTransactionManager batchDestinationTM(@Qualifier("dataSourceTwo") DataSource dataSourceTwo) {
+        return new JdbcTransactionManager(dataSourceTwo);
     }
+
     @Bean
     @Qualifier("batchDestinationTT")
-    public TransactionTemplate batchDestinationTT(){
-        return new TransactionTemplate(batchDestinationTM());
+    public TransactionTemplate batchDestinationTT(@Qualifier("batchDestinationTM") PlatformTransactionManager batchDestinationTM) {
+        return new TransactionTemplate(batchDestinationTM);
     }
 
 

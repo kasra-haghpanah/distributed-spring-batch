@@ -14,7 +14,7 @@ import org.springframework.integration.dsl.IntegrationFlow;
 
 import java.util.List;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "bootiful.batch.chunk.slave", havingValue = "true")
 class SlaveCustomerRemoteChunk {
 

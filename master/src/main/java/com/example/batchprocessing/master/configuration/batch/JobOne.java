@@ -50,7 +50,7 @@ import java.util.*;
 // https://github.com/coffee-software-show/lets-code-spring-batch
 // SELECT * FROM batch_job_instance;
 // SELECT * FROM batch_job_execution_params;
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class JobOne {
 
     @Bean

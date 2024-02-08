@@ -19,7 +19,7 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "bootiful.batch.chunk.slave", havingValue = "true")
 class SlaveEmailRemoteChunk {
 
