@@ -1,6 +1,5 @@
 package com.example.batchprocessing.master.configuration.batch;
 
-import com.example.batchprocessing.master.configuration.listener.JobCompletedListener;
 import com.example.batchprocessing.master.configuration.properties.Properties;
 import com.example.batchprocessing.master.configuration.structure.CsvRow;
 import com.example.batchprocessing.master.configuration.structure.Customer;
@@ -45,6 +44,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 // https://github.com/spring-projects/spring-batch/issues/4294
 // https://github.com/coffee-software-show/lets-code-spring-batch
@@ -52,6 +52,9 @@ import java.util.*;
 // SELECT * FROM batch_job_execution_params;
 @Configuration(proxyBeanMethods = false)
 public class JobOne {
+
+    // todo: clear this out after the job is done. some sort of listener?
+    public static final Map<Integer, YearReport> reportMap = new ConcurrentHashMap<Integer, YearReport>();
 
     @Bean
     @Qualifier("jobSampleOne")
@@ -319,6 +322,7 @@ public class JobOne {
                     public ExitStatus afterStep(StepExecution stepExecution) {
                         ExitStatus status = ExitStatus.COMPLETED;
                         System.out.println("the status is " + status);
+                        reportMap.clear();
                         return status;
                     }
                 })
@@ -328,10 +332,10 @@ public class JobOne {
 
     public static YearReport rowMapper(ResultSet rs, int rowNum) throws SQLException {
         Integer year = rs.getInt("year");
-        if (!JobCompletedListener.reportMap.containsKey(year)) {
-            JobCompletedListener.reportMap.put(year, new YearReport(year, new ArrayList<YearPlatformSales>()));
+        if (!reportMap.containsKey(year)) {
+            reportMap.put(year, new YearReport(year, new ArrayList<YearPlatformSales>()));
         }
-        YearReport yr = JobCompletedListener.reportMap.get(year);
+        YearReport yr = reportMap.get(year);
         yr.breakout().add(new YearPlatformSales(rs.getInt("year"), rs.getString("platform"), rs.getFloat("sales")));
         return yr;
     }
