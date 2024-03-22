@@ -5,15 +5,15 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.0</version>
+        <version>3.2.3</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.example</groupId>
-    <artifactId>batch-processing</artifactId>
+    <artifactId>distributed-spring-batch</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>batch-processing</name>
-    <description>batch-processing</description>
+    <description>distributed-spring-batch</description>
 
     <modules>
         <module>master</module>

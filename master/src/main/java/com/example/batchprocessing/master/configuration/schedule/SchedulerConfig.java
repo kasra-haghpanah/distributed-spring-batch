@@ -68,16 +68,17 @@ public class SchedulerConfig {
             JobExplorer jobExplorer,
             JobRepository jobRepository
     ) {
-
-        Runnable task = () -> {
-            JobParameters jobParameters = new JobParametersBuilder()
-                    .addString("uuid", UUID.randomUUID().toString())
-                    .addDate("date", new Date())
-                    .toJobParameters();
-            runJobLauncher(taskExecutorJobLauncher, jobSampleOne, jobOperator, jobParameters, jobExplorer, jobRepository);
+        return (param) -> {
+            Runnable task = () -> {
+                JobParameters jobParameters = new JobParametersBuilder()
+                        .addString("uuid", UUID.randomUUID().toString())
+                        .addDate("date", new Date())
+                        .toJobParameters();
+                runJobLauncher(taskExecutorJobLauncher, jobSampleOne, jobOperator, jobParameters, jobExplorer, jobRepository);
+            };
+            taskScheduler.scheduleWithFixedDelay(task, Duration.ofSeconds(Properties.getBatchJobLauncherScheduleWithFixedDelay()));
         };
-        taskScheduler.scheduleWithFixedDelay(task, Duration.ofSeconds(Properties.getBatchJobLauncherScheduleWithFixedDelay()));
-        return null;
+
     }
 
 
@@ -92,19 +93,20 @@ public class SchedulerConfig {
 
     ) {
 
+        return (param) -> {
+            Runnable task = () -> {
+                JobParameters jobParameters = new JobParametersBuilder()
+                        .addString("uuid", UUID.randomUUID().toString())
+                        .addDate("date", new Date())
+                        .addString("inputFile", "classpath:data/email.json")
+                        .addString("outputFile", "classpath:data/email-out.json")
+                        .toJobParameters();
 
-        Runnable task = () -> {
-            JobParameters jobParameters = new JobParametersBuilder()
-                    .addString("uuid", UUID.randomUUID().toString())
-                    .addDate("date", new Date())
-                    .addString("inputFile", "classpath:data/email.json")
-                    .addString("outputFile", "classpath:data/email-out.json")
-                    .toJobParameters();
-
-            runJobLauncher(taskExecutorJobLauncher, jobSampleTwo, jobOperator, jobParameters, jobExplorer, jobRepository);
+                runJobLauncher(taskExecutorJobLauncher, jobSampleTwo, jobOperator, jobParameters, jobExplorer, jobRepository);
+            };
+            taskScheduler.scheduleWithFixedDelay(task, Duration.ofSeconds(Properties.getBatchJobLauncherScheduleWithFixedDelay()));
         };
-        taskScheduler.scheduleWithFixedDelay(task, Duration.ofSeconds(Properties.getBatchJobLauncherScheduleWithFixedDelay()));
-        return null;
+
     }
 
 }
